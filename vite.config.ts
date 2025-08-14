@@ -23,6 +23,17 @@ export default defineConfig(({ mode }) => ({
   build: {
     // Code splitting configuration
     rollupOptions: {
+      external: [
+        // Exclude Node.js modules from browser bundle
+        'express-rate-limit',
+        'express-validator',
+        'bcryptjs',
+        'jsonwebtoken',
+        'helmet',
+        'cors',
+        'multer',
+        'sharp'
+      ],
       output: {
         manualChunks: {
           // Vendor chunk for large dependencies
@@ -35,13 +46,8 @@ export default defineConfig(({ mode }) => ({
           ],
           'chart-vendor': ['recharts'],
           'query-vendor': ['@tanstack/react-query'],
-          'supabase-vendor': ['@supabase/supabase-js'],
-          // Security modules
-          'security': [
-            './src/lib/security/middleware',
-            './src/lib/security/fraudDetection',
-            './src/lib/security/encryption'
-          ]
+          'table-vendor': ['@tanstack/react-table'],
+          'supabase-vendor': ['@supabase/supabase-js']
         }
       }
     },
