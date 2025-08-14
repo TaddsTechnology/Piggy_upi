@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   AuthService,
   UserService,
@@ -68,6 +69,7 @@ const DEFAULT_ROUNDUP_RULE: RoundupRule = {
 const DEFAULT_WEEKLY_TARGET = 200;
 
 export const usePiggyCore = (): [PiggyState, PiggyActions] => {
+  const { user, demoMode } = useAuth();
   // State
   const [roundupRule, setRoundupRule] = useState<RoundupRule>(DEFAULT_ROUNDUP_RULE);
   const [portfolioPreset, setPortfolioPresetState] = useState<'safe' | 'balanced' | 'growth'>('balanced');
@@ -77,38 +79,48 @@ export const usePiggyCore = (): [PiggyState, PiggyActions] => {
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [prices, setPrices] = useState<Record<string, number>>({});
   
-  // Initialize with mock data
+  // Initialize data based on auth state
   useEffect(() => {
-    const mockTransactions = generateMockTransactions(15);
-    setTransactions(mockTransactions);
-    
-    // Generate initial roundups from mock transactions
-    const calculator = new RoundupCalculator(roundupRule);
-    const initialRoundups = calculator.processTransactions(mockTransactions);
-    setLedger(initialRoundups);
-    
-    // Initialize some mock holdings
-    const mockHoldings: Holding[] = [
-      {
-        symbol: 'NIFTYBEES',
-        units: 35.42,
-        avgCost: 278.50,
-        currentPrice: 285.50,
-        currentValue: 35.42 * 285.50
-      },
-      {
-        symbol: 'GOLDBEES',
-        units: 76.89,
-        avgCost: 63.20,
-        currentPrice: 65.25,
-        currentValue: 76.89 * 65.25
-      }
-    ];
-    setHoldings(mockHoldings);
-    
-    // Initialize prices
+    if (demoMode) {
+      // Demo user: load mock data
+      const mockTransactions = generateMockTransactions(15);
+      setTransactions(mockTransactions);
+      
+      const calculator = new RoundupCalculator(roundupRule);
+      const initialRoundups = calculator.processTransactions(mockTransactions);
+      setLedger(initialRoundups);
+      
+      const mockHoldings: Holding[] = [
+        {
+          symbol: 'NIFTYBEES',
+          units: 35.42,
+          avgCost: 278.50,
+          currentPrice: 285.50,
+          currentValue: 35.42 * 285.50
+        },
+        {
+          symbol: 'GOLDBEES',
+          units: 76.89,
+          avgCost: 63.20,
+          currentPrice: 65.25,
+          currentValue: 76.89 * 65.25
+        }
+      ];
+      setHoldings(mockHoldings);
+      
+    } else if (user) {
+      // Real user: load from backend (or show empty state)
+      // In a real app, you would fetch data from your backend service here
+      // For now, we will just show an empty state
+      setTransactions([]);
+      setLedger([]);
+      setHoldings([]);
+    }
+
+    // Prices are always needed
     setPrices(PriceFeedSimulator.getAllPrices());
-  }, []);
+
+  }, [demoMode, user, roundupRule]);
 
   // Update roundups when rule changes
   useEffect(() => {
