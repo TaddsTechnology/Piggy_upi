@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* UPI Piggy Design System - Indian Fintech Colors & Typography */
+
+@layer base {
+  :root {
+    /* Core Fintech Palette */
+    --background: 0 0% 97%;
+    --foreground: 200 18% 19%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 200 18% 19%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 18% 19%;
+    
+    /* Primary: Soft Green for growth & trust */
+    --primary: 122 39% 49%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 122 39% 85%;
+    
+    /* Secondary: Cool Blue for info */
+    --secondary: 207 90% 54%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 207 90% 85%;
+    
+    /* Accent: Soft Yellow for highlights */
+    --accent: 45 95% 65%;
+    --accent-foreground: 200 18% 19%;
+    --accent-light: 45 95% 90%;
+    
+    /* Muted backgrounds */
+    --muted: 0 0% 88%;
+    --muted-foreground: 200 10% 45%;
+    
+    /* Success, Warning, Error */
+    --success: 122 39% 49%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 95% 65%;
+    --warning-foreground: 200 18% 19%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders & inputs */
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 122 39% 49%;
+    
+    /* Trust elements */
+    --trust-badge: 122 30% 95%;
+    --trust-text: 122 39% 35%;
+    
+    /* Gradients for fintech appeal */
+    --gradient-growth: linear-gradient(135deg, hsl(122 39% 49%), hsl(122 50% 60%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    --gradient-accent: linear-gradient(135deg, hsl(45 95% 65%), hsl(45 85% 75%));
+    
+    /* Border radius for modern feel */
+    --radius: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+    font-feature-settings: "tnum"; /* Tabular numbers for money */
+  }
+  
+  /* Typography Classes */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+  
+  /* Mobile-first padding and spacing */
+  .container-mobile {
+    @apply px-3 py-4 w-full mx-auto sm:px-4 sm:py-6 sm:max-w-sm md:max-w-md lg:max-w-2xl xl:max-w-none xl:px-6;
+  }
+  
+  /* Fintech specific components */
+  .balance-text {
+    @apply text-3xl font-heading font-semibold tracking-tight;
+    font-feature-settings: "tnum";
+  }
+  
+  .growth-indicator {
+    @apply text-sm font-medium text-primary bg-primary-light px-2 py-1 rounded-full;
+  }
+  
+  .round-up-badge {
+    @apply bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .trust-badge {
+    @apply bg-trust-badge text-trust-text px-3 py-2 rounded-lg text-sm flex items-center gap-2;
+  }
+}

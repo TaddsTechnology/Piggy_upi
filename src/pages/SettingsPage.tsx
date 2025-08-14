@@ -1,0 +1,241 @@
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
+import { 
+  Settings, 
+  IndianRupee, 
+  PieChart, 
+  Globe, 
+  Bell, 
+  Shield, 
+  User,
+  LogOut,
+  HelpCircle,
+  TestTube
+} from "lucide-react";
+
+const SettingsPage = () => {
+  const navigate = useNavigate();
+  const { user, signOut, demoMode, exitDemoMode } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const handleExitDemoMode = () => {
+    exitDemoMode();
+    navigate('/auth');
+  };
+  return (
+    <div className="container-mobile xl:container xl:py-8">
+      {/* Header */}
+      <div className="text-center xl:text-left mb-8">
+        <h1 className="text-2xl xl:text-4xl font-heading font-semibold mb-2">Settings</h1>
+        <p className="text-muted-foreground xl:text-lg">Customize your UPI Piggy experience</p>
+      </div>
+
+      <div className="xl:grid xl:grid-cols-2 xl:gap-8">
+        <div className="space-y-6">
+          {/* Investment Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <IndianRupee className="text-primary" size={20} />
+                Round-Up Rules
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Round up to nearest</label>
+                <Select defaultValue="10">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">₹10</SelectItem>
+                    <SelectItem value="20">₹20</SelectItem>
+                    <SelectItem value="50">₹50</SelectItem>
+                    <SelectItem value="100">₹100</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Higher amounts = faster savings but larger round-ups
+                </p>
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Auto-invest weekly</p>
+                  <p className="text-sm text-muted-foreground">Automatically invest accumulated round-ups</p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Portfolio Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PieChart className="text-secondary" size={20} />
+                Portfolio Mode
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Investment strategy</label>
+                <Select defaultValue="balanced">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="safe">Safe (70% Gold, 30% Index)</SelectItem>
+                    <SelectItem value="balanced">Balanced (60% Gold, 40% Index)</SelectItem>
+                    <SelectItem value="growth">Growth (40% Gold, 60% Index)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Rebalance monthly</p>
+                  <p className="text-sm text-muted-foreground">Maintain your preferred asset allocation</p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6 mt-6 xl:mt-0">
+          {/* Demo Mode Card - only show if in demo mode */}
+          {demoMode && (
+            <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                  <TestTube size={20} />
+                  Demo Mode Active
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-amber-700 dark:text-amber-300">
+                  You're currently using UPI Piggy with demo data. All transactions and investments shown are simulated for demonstration purposes.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900"
+                  onClick={handleExitDemoMode}
+                >
+                  Exit Demo Mode & Sign Up
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* App Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="text-foreground" size={20} />
+                App Preferences
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Globe size={16} />
+                  Language
+                </label>
+                <Select defaultValue="english">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="english">English</SelectItem>
+                    <SelectItem value="hindi">हिंदी (Hindi)</SelectItem>
+                    <SelectItem value="hinglish">Hinglish</SelectItem>
+                    <SelectItem value="tamil">தமிழ் (Tamil)</SelectItem>
+                    <SelectItem value="bengali">বাংলা (Bengali)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Bell size={16} />
+                  <div>
+                    <p className="font-medium">Push notifications</p>
+                    <p className="text-sm text-muted-foreground">Investment updates & milestones</p>
+                  </div>
+                </div>
+                <Switch defaultChecked />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shield size={16} />
+                  <div>
+                    <p className="font-medium">Biometric login</p>
+                    <p className="text-sm text-muted-foreground">Use fingerprint or face ID</p>
+                  </div>
+                </div>
+                <Switch defaultChecked />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Account Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Account & Support</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button variant="outline" className="w-full justify-start">
+                <User size={16} className="mr-2" />
+                Profile & KYC
+              </Button>
+              
+              <Button variant="outline" className="w-full justify-start">
+                <HelpCircle size={16} className="mr-2" />
+                Help & Support
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full justify-start text-destructive hover:text-destructive"
+                onClick={handleSignOut}
+              >
+                <LogOut size={16} className="mr-2" />
+                Sign Out
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Version Info */}
+      <div className="text-center mt-8 pb-4">
+        <p className="text-xs text-muted-foreground">
+          UPI Piggy v1.2.0 • Made with ❤️ in India
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default SettingsPage;
