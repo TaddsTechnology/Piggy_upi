@@ -24,8 +24,7 @@
     "test:security": "npm audit && npm run test:run -- src/lib/security",
     "perf:analyze": "npm run build:analyze",
     "perf:lighthouse": "lighthouse http://localhost:8080 --output html --output-path ./lighthouse-report.html",
-    "type-check": "tsc --noEmit",
-    "prepare": "playwright install"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
