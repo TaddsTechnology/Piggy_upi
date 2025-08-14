@@ -21,61 +21,20 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Code splitting configuration
+    // Simplified build configuration for Vercel compatibility
+    target: 'es2020',
+    minify: true,
+    sourcemap: false,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
-      external: [
-        // Exclude Node.js modules from browser bundle
-        'express-rate-limit',
-        'express-validator',
-        'bcryptjs',
-        'jsonwebtoken',
-        'helmet',
-        'cors',
-        'multer',
-        'sharp'
-      ],
       output: {
         manualChunks: {
-          // Vendor chunk for large dependencies
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-toast'
-          ],
-          'chart-vendor': ['recharts'],
-          'query-vendor': ['@tanstack/react-query'],
-          'table-vendor': ['@tanstack/react-table'],
+          'react-vendor': ['react', 'react-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
           'supabase-vendor': ['@supabase/supabase-js']
         }
       }
-    },
-    // Optimize build size
-    target: 'es2015',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: mode === 'production',
-        drop_debugger: mode === 'production',
-      },
-    },
-    // Source maps for debugging
-    sourcemap: mode === 'development',
-    // Chunk size warnings
-    chunkSizeWarningLimit: 1000,
-  },
-  // Dependency optimization
-  optimizeDeps: {
-    include: [
-      'react',
-      'react-dom',
-      'react-router-dom',
-      '@tanstack/react-query',
-      '@supabase/supabase-js',
-      'recharts'
-    ],
-    exclude: ['@vite/client', '@vite/env']
+    }
   },
   // Define global variables
   define: {
