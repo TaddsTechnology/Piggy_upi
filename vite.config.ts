@@ -17,6 +17,27 @@ export default defineConfig({
   build: {
     target: 'es2020',
     minify: 'esbuild',
-    sourcemap: false
+    sourcemap: false,
+    rollupOptions: {
+      external: [
+        // Server-side Node.js modules that shouldn't be bundled
+        'express-rate-limit',
+        'express-validator',
+        'bcryptjs',
+        'jsonwebtoken',
+        'helmet',
+        'cors',
+        'multer',
+        'sharp',
+        'net',
+        'fs',
+        'path',
+        'crypto'
+      ]
+    }
+  },
+  define: {
+    // Define process.env for browser compatibility
+    'process.env': {}
   }
 });
