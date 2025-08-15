@@ -25,6 +25,7 @@ import {
   type Holding,
   type PortfolioPreset
 } from '@/lib/algorithms';
+import { useMarketData } from '@/hooks/use-market-data';
 import type { User } from '@supabase/supabase-js';
 
 export interface PiggyState {
@@ -68,8 +69,19 @@ const DEFAULT_ROUNDUP_RULE: RoundupRule = {
 
 const DEFAULT_WEEKLY_TARGET = 200;
 
+// Counter to ensure unique transaction IDs
+let transactionCounter = 0;
+
 export const usePiggyCore = (): [PiggyState, PiggyActions] => {
   const { user, demoMode } = useAuth();
+  
+  // Market data from Yahoo Finance API
+  const [marketState, marketActions] = useMarketData(['NIFTYBEES', 'GOLDBEES', 'LIQUIDBEES'], {
+    autoRefresh: false, // Manual refresh only
+    refreshInterval: 60000, // Not used since autoRefresh is false
+    fallbackOnError: true
+  });
+  
   // State
   const [roundupRule, setRoundupRule] = useState<RoundupRule>(DEFAULT_ROUNDUP_RULE);
   const [portfolioPreset, setPortfolioPresetState] = useState<'safe' | 'balanced' | 'growth'>('balanced');
@@ -77,7 +89,6 @@ export const usePiggyCore = (): [PiggyState, PiggyActions] => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [ledger, setLedger] = useState<PiggyLedgerEntry[]>([]);
   const [holdings, setHoldings] = useState<Holding[]>([]);
-  const [prices, setPrices] = useState<Record<string, number>>({});
   
   // Initialize data based on auth state
   useEffect(() => {
@@ -117,9 +128,6 @@ export const usePiggyCore = (): [PiggyState, PiggyActions] => {
       setHoldings([]);
     }
 
-    // Prices are always needed
-    setPrices(PriceFeedSimulator.getAllPrices());
-
   }, [demoMode, user, roundupRule]);
 
   // Update roundups when rule changes
@@ -141,6 +149,17 @@ export const usePiggyCore = (): [PiggyState, PiggyActions] => {
     new InvestmentSweeper(currentPreset.allocations, currentPreset.minSweepAmount),
     [currentPreset]
   );
+
+  // Get real-time prices from market data
+  const prices = useMemo(() => {
+    const priceMap: Record<string, number> = {};
+    Object.entries(marketState.data).forEach(([symbol, data]) => {
+      if (data) {
+        priceMap[symbol] = data.price;
+      }
+    });
+    return priceMap;
+  }, [marketState.data]);
 
   // Calculate derived values
   const piggyBalance = useMemo(() => 
@@ -223,13 +242,15 @@ export const usePiggyCore = (): [PiggyState, PiggyActions] => {
     }
   };
 
-  const refreshPrices = () => {
-    setPrices(PriceFeedSimulator.getAllPrices());
+  const refreshPrices = async () => {
+    await marketActions.refreshData();
   };
 
   const simulateTransaction = (amount: number, merchant: string) => {
+    // Generate unique ID using timestamp and counter
+    transactionCounter += 1;
     const newTransaction: Transaction = {
-      id: `sim_txn_${Date.now()}`,
+      id: `sim_txn_${Date.now()}_${transactionCounter}`,
       amount,
       direction: 'debit',
       timestamp: new Date(),

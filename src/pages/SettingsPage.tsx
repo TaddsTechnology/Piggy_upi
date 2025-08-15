@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSettings } from "@/hooks/use-settings";
 import { 
   Settings, 
   IndianRupee, 
@@ -15,12 +17,14 @@ import {
   User,
   LogOut,
   HelpCircle,
-  TestTube
+  TestTube,
+  Loader2
 } from "lucide-react";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { user, signOut, demoMode, exitDemoMode } = useAuth();
+  const { settings, loading, saving, updateSettingLocal, saveAllSettings } = useSettings();
 
   const handleSignOut = async () => {
     try {
@@ -35,6 +39,28 @@ const SettingsPage = () => {
     exitDemoMode();
     navigate('/auth');
   };
+
+  if (loading) {
+    return (
+      <div className="container-mobile xl:container xl:py-8 flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+          <p className="text-muted-foreground">Loading your settings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!settings) {
+    return (
+      <div className="container-mobile xl:container xl:py-8 flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <p className="text-muted-foreground">Unable to load settings. Please try refreshing the page.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container-mobile xl:container xl:py-8">
       {/* Header */}
@@ -56,7 +82,10 @@ const SettingsPage = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Round up to nearest</label>
-                <Select defaultValue="10">
+                <Select 
+                  value={settings.round_to_nearest.toString()} 
+                  onValueChange={(value) => updateSettingLocal('round_to_nearest', parseInt(value))}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -74,12 +103,67 @@ const SettingsPage = () => {
 
               <Separator />
 
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Min round-up</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">₹</span>
+                      <Input
+                        type="number"
+                        min="0.1"
+                        step="0.1"
+                        value={settings.min_roundup}
+                        onChange={(e) => updateSettingLocal('min_roundup', parseFloat(e.target.value))}
+                        className="pl-8"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Max round-up</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">₹</span>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={settings.max_roundup}
+                        onChange={(e) => updateSettingLocal('max_roundup', parseFloat(e.target.value))}
+                        className="pl-8"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Weekly investment target</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">₹</span>
+                    <Input
+                      type="number"
+                      min="10"
+                      value={settings.weekly_target}
+                      onChange={(e) => updateSettingLocal('weekly_target', parseFloat(e.target.value))}
+                      className="pl-8"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Target amount to save per week through round-ups
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Auto-invest weekly</p>
                   <p className="text-sm text-muted-foreground">Automatically invest accumulated round-ups</p>
                 </div>
-                <Switch defaultChecked />
+                <Switch 
+                  checked={settings.auto_invest_enabled}
+                  onCheckedChange={(checked) => updateSettingLocal('auto_invest_enabled', checked)}
+                  disabled={saving}
+                />
               </div>
             </CardContent>
           </Card>
@@ -95,26 +179,64 @@ const SettingsPage = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Investment strategy</label>
-                <Select defaultValue="balanced">
+                <Select 
+                  value={settings.portfolio_preset} 
+                  onValueChange={(value) => updateSettingLocal('portfolio_preset', value as 'safe' | 'balanced' | 'growth')}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="safe">Safe (70% Gold, 30% Index)</SelectItem>
-                    <SelectItem value="balanced">Balanced (60% Gold, 40% Index)</SelectItem>
-                    <SelectItem value="growth">Growth (40% Gold, 60% Index)</SelectItem>
+                    <SelectItem value="balanced">Balanced (50% Gold, 50% Index)</SelectItem>
+                    <SelectItem value="growth">Growth (30% Gold, 70% Index)</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  Your selected strategy determines how your investments are allocated
+                </p>
               </div>
 
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Rebalance monthly</p>
-                  <p className="text-sm text-muted-foreground">Maintain your preferred asset allocation</p>
+              <div className="bg-muted/50 rounded-lg p-3">
+                <h4 className="text-sm font-medium mb-2">Current Allocation</h4>
+                <div className="space-y-1 text-xs">
+                  {settings.portfolio_preset === 'safe' && (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Gold ETF (GOLDBEES)</span>
+                        <span>70%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Nifty ETF (NIFTYBEES)</span>
+                        <span>30%</span>
+                      </div>
+                    </>
+                  )}
+                  {settings.portfolio_preset === 'balanced' && (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Gold ETF (GOLDBEES)</span>
+                        <span>50%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Nifty ETF (NIFTYBEES)</span>
+                        <span>50%</span>
+                      </div>
+                    </>
+                  )}
+                  {settings.portfolio_preset === 'growth' && (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Gold ETF (GOLDBEES)</span>
+                        <span>30%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Nifty ETF (NIFTYBEES)</span>
+                        <span>70%</span>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <Switch defaultChecked />
               </div>
             </CardContent>
           </Card>
@@ -132,7 +254,7 @@ const SettingsPage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-amber-700 dark:text-amber-300">
-                  You're currently using UPI Piggy with demo data. All transactions and investments shown are simulated for demonstration purposes.
+                  You're currently using UPI Piggy with demo data. Settings are saved locally and will not persist across sessions.
                 </p>
                 <Button 
                   variant="outline" 
@@ -226,6 +348,19 @@ const SettingsPage = () => {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Save Settings Button */}
+      <div className="mt-8 flex justify-center">
+        <Button 
+          onClick={saveAllSettings}
+          disabled={saving}
+          size="lg"
+          className="min-w-[200px]"
+        >
+          {saving && <Loader2 size={16} className="mr-2 animate-spin" />}
+          Save Settings
+        </Button>
       </div>
 
       {/* Version Info */}

@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -11,11 +12,13 @@ import {
   EmptyPiggyBalanceState, 
   EmptyTransactionsState 
 } from "@/components/EmptyStates";
+import { MarketStatus, MarketIndicator } from "@/components/MarketStatus";
 
 const HomePage = () => {
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? "Good morning! 🌅" : currentHour < 17 ? "Good afternoon! ☀️" : "Good evening! 🌙";
   
+  const navigate = useNavigate();
   const { user, demoMode } = useAuth();
   const [piggyState, piggyActions] = usePiggyCore();
   
@@ -53,10 +56,15 @@ const HomePage = () => {
         {/* Header */}
         {!isNewUser && (
           <div className="text-center xl:text-left">
-            <h1 className="text-2xl xl:text-4xl font-heading font-semibold text-foreground mb-2">
-              {greeting}
-            </h1>
-            <p className="text-muted-foreground xl:text-lg">Let's grow your wealth today</p>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-2xl xl:text-4xl font-heading font-semibold text-foreground mb-2">
+                  {greeting}
+                </h1>
+                <p className="text-muted-foreground xl:text-lg">Let's grow your wealth today</p>
+              </div>
+              <MarketIndicator className="hidden xl:block" />
+            </div>
           </div>
         )}
 
@@ -76,29 +84,46 @@ const HomePage = () => {
             }}
           />
         ) : !isNewUser ? (
-          <Card className="mb-6 bg-gradient-growth text-white">
-            <CardContent className="p-6">
+          <Card className="mb-6 bg-gradient-to-br from-primary via-primary/90 to-secondary text-white shadow-2xl">
+            <CardContent className="p-8">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-white/80 text-sm mb-1">Portfolio Value</p>
-                  <div className="flex items-center gap-2">
-                    <IndianRupee size={20} />
-                    <span className="balance-text text-white">{formatCurrency(piggyState.portfolioValue)}</span>
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="text-yellow-300" size={20} />
+                    <p className="text-white/90 text-sm font-medium">Portfolio Value</p>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <IndianRupee size={28} />
+                    <span className="text-4xl xl:text-5xl font-heading font-bold tracking-tight">
+                      {piggyState.portfolioValue.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <p className="text-white/70 text-sm mt-1">Your wealth is growing!</p>
                 </div>
                 <div className="text-right">
-                  <div className="growth-indicator !bg-white/20 !text-white">
-                    <TrendingUp size={12} className="mr-1" />
+                  <div className="bg-white/20 text-white border border-white/30 px-3 py-2 rounded-full text-sm font-semibold">
+                    <TrendingUp size={12} className="mr-1 inline" />
                     {formatPercentage(piggyState.gainsPercent)}
                   </div>
+                  <p className="text-white/70 text-xs mt-1">Total Returns</p>
                 </div>
               </div>
-              <p className="text-white/80 text-sm">
-                Invested: {formatCurrency(piggyState.totalInvested)} • Gains: {formatCurrency(piggyState.totalGains)}
-              </p>
-              <p className="text-white/80 text-xs mt-2">
-                Piggy Balance: {formatCurrency(piggyState.piggyBalance)} ready to invest
-              </p>
+              <div className="grid grid-cols-2 gap-4 mt-4 text-white/80 text-sm">
+                <div>
+                  <p className="text-white/60 text-xs">Invested</p>
+                  <p className="font-semibold">{formatCurrency(piggyState.totalInvested)}</p>
+                </div>
+                <div>
+                  <p className="text-white/60 text-xs">Gains</p>
+                  <p className="font-semibold text-yellow-200">{formatCurrency(piggyState.totalGains)}</p>
+                </div>
+              </div>
+              <div className="mt-4 pt-3 border-t border-white/20">
+                <p className="text-white/70 text-sm flex items-center gap-2">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                  Piggy Balance: <span className="font-semibold text-green-200">{formatCurrency(piggyState.piggyBalance)}</span> ready to invest
+                </p>
+              </div>
             </CardContent>
           </Card>
         ) : null}
@@ -133,10 +158,10 @@ const HomePage = () => {
         {!isNewUser && (
           <Button 
             size="lg" 
-            className="w-full bg-gradient-growth hover:opacity-90 font-heading font-medium"
+            className="w-full h-14 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-heading font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
             onClick={() => {
               if (piggyState.piggyBalance >= 50) {
-                piggyActions.manualInvest(piggyState.piggyBalance);
+                navigate('/invest');
               } else {
                 // Simulate adding some transactions to build balance
                 for (let i = 0; i < 5; i++) {
@@ -151,7 +176,10 @@ const HomePage = () => {
             }}
             disabled={piggyState.piggyBalance < 1}
           >
-            {piggyState.piggyBalance >= 50 ? 'Invest Now' : 'Build Balance First'}
+            <div className="flex items-center gap-2">
+              <TrendingUp size={18} />
+              {piggyState.piggyBalance >= 50 ? 'Invest Now' : 'Build Balance First'}
+            </div>
           </Button>
         )}
       </div>
@@ -207,6 +235,11 @@ const HomePage = () => {
           </CardContent>
         </Card>
 
+        {/* Market Status */}
+        {!isNewUser && (
+          <MarketStatus showDetailedView={false} />
+        )}
+        
         {/* Quick Stats */}
         {!isNewUser && (
           <Card>

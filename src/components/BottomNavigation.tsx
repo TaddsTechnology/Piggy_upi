@@ -1,10 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { Home, BarChart3, PieChart, Trophy, Settings } from "lucide-react";
+import { Home, BarChart3, PieChart, Trophy, Settings, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { path: "/", icon: Home, label: "Home" },
-  { path: "/insights", icon: BarChart3, label: "Insights" },
+  { path: "/markets", icon: TrendingUp, label: "Markets" },
   { path: "/portfolio", icon: PieChart, label: "Portfolio" },
   { path: "/rewards", icon: Trophy, label: "Rewards" },
   { path: "/settings", icon: Settings, label: "Settings" },

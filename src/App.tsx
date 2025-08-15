@@ -13,6 +13,8 @@ import {
   GamificationPage,
   SettingsPage,
   InsightsPage,
+  MarketsPage,
+  InvestmentPage,
   AuthPage,
   KYCPage,
   NotFound,
@@ -81,6 +83,11 @@ const App = () => {
                       <InsightsPage />
                     </Suspense>
                   } />
+                  <Route path="markets" element={
+                    <Suspense fallback={<LoadingFallback message="Loading markets..." />}>
+                      <MarketsPage />
+                    </Suspense>
+                  } />
                   <Route path="rewards" element={
                     <Suspense fallback={<LoadingFallback message="Loading rewards..." />}>
                       <GamificationPage />
@@ -89,6 +96,11 @@ const App = () => {
                   <Route path="settings" element={
                     <Suspense fallback={<LoadingFallback message="Loading settings..." />}>
                       <SettingsPage />
+                    </Suspense>
+                  } />
+                  <Route path="invest" element={
+                    <Suspense fallback={<LoadingFallback message="Loading investment..." />}>
+                      <InvestmentPage />
                     </Suspense>
                   } />
                   <Route path="kyc" element={

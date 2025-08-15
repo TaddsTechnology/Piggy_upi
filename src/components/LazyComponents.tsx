@@ -8,6 +8,8 @@ export const PortfolioPage = lazy(() => import('../pages/PortfolioPage'));
 export const GamificationPage = lazy(() => import('../pages/GamificationPage'));
 export const SettingsPage = lazy(() => import('../pages/SettingsPage'));
 export const InsightsPage = lazy(() => import('../pages/InsightsPage'));
+export const MarketsPage = lazy(() => import('../pages/MarketsPage'));
+export const InvestmentPage = lazy(() => import('../pages/InvestmentPage'));
 export const AuthPage = lazy(() => import('../pages/AuthPage'));
 export const KYCPage = lazy(() => import('../pages/KYCPage'));
 export const NotFound = lazy(() => import('../pages/NotFound'));
@@ -100,6 +102,7 @@ export const preloadCriticalComponents = () => {
   // Preload most likely next pages
   HomePage.preload?.();
   PortfolioPage.preload?.();
+  MarketsPage.preload?.();
   HistoryPage.preload?.();
 };
 
