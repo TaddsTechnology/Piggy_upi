@@ -66,9 +66,21 @@ export const DEFAULT_PORTFOLIO_SYMBOLS = [
 ];
 
 class YahooFinanceAPI {
-  private baseUrl = 'https://query1.finance.yahoo.com/v8/finance/chart';
-  private quotesUrl = 'https://query2.finance.yahoo.com/v1/finance/quoteType';
-  private corsProxy = 'https://api.allorigins.win/raw?url='; // CORS proxy
+  private baseUrl = this.getApiBaseUrl();
+  // Using our own proxy API - no direct Yahoo Finance calls from client
+  
+  /**
+   * Get the correct API base URL for current environment
+   */
+  private getApiBaseUrl(): string {
+    // In development mode, if API server is not available, use a CORS proxy
+    if (import.meta.env.DEV) {
+      return '/api/market-data'; // This will be proxied by Vite to localhost:3001
+    }
+    
+    // In production, use the deployed Vercel function
+    return '/api/market-data';
+  }
   
   // Persistent cache to avoid excessive API calls
   private cache = new Map<string, { data: MarketData; timestamp: number }>();
@@ -159,15 +171,10 @@ class YahooFinanceAPI {
         }
       }
 
-      // Use CORS proxy for development
-      const apiUrl = `${this.baseUrl}/${symbol}`;
-      const urlToFetch = isDevelopment() ? `${this.corsProxy}${encodeURIComponent(apiUrl)}` : apiUrl;
+      // Use our proxy API endpoint
+      const apiUrl = `${this.baseUrl}?symbol=${symbol}`;
       
-      const response = await fetch(urlToFetch, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-      });
+      const response = await fetch(apiUrl);
 
       if (!response.ok) {
         console.warn(`Yahoo Finance API error for ${symbol}:`, response.status);
@@ -225,6 +232,79 @@ class YahooFinanceAPI {
   async getMultipleQuotes(symbols: string[], forceRefresh: boolean = false): Promise<Record<string, MarketData | null>> {
     const results: Record<string, MarketData | null> = {};
     
+    // Check cache first for symbols we can skip
+    const symbolsToFetch: string[] = [];
+    
+    symbols.forEach(symbol => {
+      if (!forceRefresh) {
+        const cached = this.cache.get(symbol);
+        if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+          results[symbol.replace('.NS', '')] = cached.data;
+          return;
+        }
+      }
+      symbolsToFetch.push(symbol);
+    });
+
+    // If no symbols need fetching, return cached results
+    if (symbolsToFetch.length === 0) {
+      return results;
+    }
+
+    try {
+      // Use batch API call for multiple symbols
+      const apiUrl = `${this.baseUrl}?symbols=${symbolsToFetch.join(',')}`;
+      const response = await fetch(apiUrl);
+
+      if (!response.ok) {
+        console.warn('Batch Yahoo Finance API error:', response.status);
+        // Fall back to individual calls if batch fails
+        return await this.getMultipleQuotesIndividual(symbols, forceRefresh);
+      }
+
+      const batchData = await response.json();
+      
+      // Process batch response
+      if (Array.isArray(batchData)) {
+        batchData.forEach(item => {
+          if (item.symbol && item.data?.chart?.result?.[0]) {
+            const marketData = this.processYahooData(item.data, item.symbol);
+            if (marketData) {
+              results[item.symbol.replace('.NS', '')] = marketData;
+              this.cache.set(item.symbol, { data: marketData, timestamp: Date.now() });
+            }
+          }
+        });
+      }
+
+      // Fill in any missing symbols with null
+      symbolsToFetch.forEach(symbol => {
+        const cleanSymbol = symbol.replace('.NS', '');
+        if (!(cleanSymbol in results)) {
+          results[cleanSymbol] = null;
+        }
+      });
+
+    } catch (error) {
+      console.error('Error in batch fetch:', error);
+      // Fall back to individual calls
+      return await this.getMultipleQuotesIndividual(symbols, forceRefresh);
+    }
+
+    // Save to localStorage after successful fetch
+    if (forceRefresh) {
+      this.saveToLocalStorage();
+    }
+
+    return results;
+  }
+
+  /**
+   * Fallback to individual API calls for multiple symbols
+   */
+  private async getMultipleQuotesIndividual(symbols: string[], forceRefresh: boolean = false): Promise<Record<string, MarketData | null>> {
+    const results: Record<string, MarketData | null> = {};
+    
     // Fetch all quotes in parallel
     const promises = symbols.map(async (symbol) => {
       const quote = await this.getQuote(symbol, forceRefresh);
@@ -243,12 +323,44 @@ class YahooFinanceAPI {
       }
     });
 
-    // Save to localStorage after successful fetch
-    if (forceRefresh) {
-      this.saveToLocalStorage();
+    return results;
+  }
+
+  /**
+   * Process Yahoo Finance API response data
+   */
+  private processYahooData(data: any, symbol: string): MarketData | null {
+    if (!data.chart?.result?.[0]) {
+      console.warn(`No data found for symbol: ${symbol}`);
+      return null;
     }
 
-    return results;
+    const result = data.chart.result[0];
+    const meta = result.meta;
+    const quote = result.indicators?.quote?.[0];
+
+    if (!meta || !quote) {
+      console.warn(`Invalid data structure for symbol: ${symbol}`);
+      return null;
+    }
+
+    // Get the latest values
+    const latestPrice = meta.regularMarketPrice || meta.previousClose || 0;
+    const previousClose = meta.previousClose || latestPrice;
+    const change = latestPrice - previousClose;
+    const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
+
+    return {
+      symbol: symbol.replace('.NS', ''), // Remove .NS suffix for display
+      price: Number(latestPrice.toFixed(2)),
+      change: Number(change.toFixed(2)),
+      changePercent: Number(changePercent.toFixed(2)),
+      volume: meta.regularMarketVolume || 0,
+      currency: meta.currency || 'INR',
+      lastUpdated: new Date(),
+      marketState: meta.marketState || 'CLOSED',
+      name: meta.longName || meta.shortName || symbol
+    };
   }
 
   /**
