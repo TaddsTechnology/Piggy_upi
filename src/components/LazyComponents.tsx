@@ -3,6 +3,7 @@ import { lazy } from 'react';
 
 // Page components - loaded only when needed
 export const HomePage = lazy(() => import('../pages/HomePage'));
+export const SmartSipHomePage = lazy(() => import('../pages/SmartSipHomePage'));
 export const HistoryPage = lazy(() => import('../pages/HistoryPage'));
 export const PortfolioPage = lazy(() => import('../pages/PortfolioPage'));
 export const GamificationPage = lazy(() => import('../pages/GamificationPage'));
@@ -100,7 +101,7 @@ export const withLazyLoading = (
 // Preload function for critical routes
 export const preloadCriticalComponents = () => {
   // Preload most likely next pages
-  HomePage.preload?.();
+  SmartSipHomePage.preload?.();
   PortfolioPage.preload?.();
   MarketsPage.preload?.();
   HistoryPage.preload?.();

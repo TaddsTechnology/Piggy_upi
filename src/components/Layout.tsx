@@ -4,10 +4,10 @@ import TrustBadge from "./TrustBadge";
 
 const Layout = () => {
   return (
-    <div className="min-h-screen bg-background flex flex-col xl:flex-row">
+    <div className="min-h-screen-mobile bg-background flex flex-col xl:flex-row">
       {/* Mobile Header */}
-      <header className="xl:hidden bg-card border-b border-border sticky top-0 z-40 backdrop-blur-sm bg-card/95">
-        <div className="container-mobile !py-4">
+      <header className="xl:hidden bg-card border-b border-border sticky top-0 z-40 backdrop-blur-sm bg-card/95 safe-area-padding-top">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-heading font-bold text-primary">UPI Piggy</h2>
@@ -41,8 +41,8 @@ const Layout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 xl:pl-72 pb-20 xl:pb-6">
-        <div className="max-w-7xl mx-auto min-h-screen">
+      <main className="flex-1 xl:pl-72 pb-nav-mobile xl:pb-6">
+        <div className="max-w-7xl mx-auto min-h-screen-mobile px-2 xl:px-0">
           <Outlet />
         </div>
       </main>

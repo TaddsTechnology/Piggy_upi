@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Layout from "./components/Layout";
 import {
   HomePage,
+  SmartSipHomePage,
   HistoryPage,
   PortfolioPage,
   GamificationPage,
@@ -64,6 +65,16 @@ const App = () => {
                 {/* Protected routes */}
                 <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                   <Route index element={
+                    <Suspense fallback={<LoadingFallback message="Loading Smart SIP dashboard..." />}>
+                      <SmartSipHomePage />
+                    </Suspense>
+                  } />
+                  <Route path="dashboard" element={
+                    <Suspense fallback={<LoadingFallback message="Loading dashboard..." />}>
+                      <HomePage />
+                    </Suspense>
+                  } />
+                  <Route path="home" element={
                     <Suspense fallback={<LoadingFallback message="Loading dashboard..." />}>
                       <HomePage />
                     </Suspense>
@@ -93,11 +104,6 @@ const App = () => {
                       <GamificationPage />
                     </Suspense>
                   } />
-                  <Route path="settings" element={
-                    <Suspense fallback={<LoadingFallback message="Loading settings..." />}>
-                      <SettingsPage />
-                    </Suspense>
-                  } />
                   <Route path="invest" element={
                     <Suspense fallback={<LoadingFallback message="Loading investment..." />}>
                       <InvestmentPage />
@@ -106,6 +112,11 @@ const App = () => {
                   <Route path="kyc" element={
                     <Suspense fallback={<LoadingFallback message="Loading KYC form..." />}>
                       <KYCPage />
+                    </Suspense>
+                  } />
+                  <Route path="settings" element={
+                    <Suspense fallback={<LoadingFallback message="Loading settings..." />}>
+                      <SettingsPage />
                     </Suspense>
                   } />
                 </Route>
