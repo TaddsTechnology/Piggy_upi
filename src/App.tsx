@@ -1,11 +1,13 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, lazy } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Layout from "./components/Layout";
+import ErrorBoundary from "@/lib/error-boundary";
+import { createOptimizedQueryClient, initPerformanceMonitoring } from "@/lib/performance";
 import {
   HomePage,
   SmartSipHomePage,
@@ -18,12 +20,19 @@ import {
   InvestmentPage,
   AuthPage,
   KYCPage,
+  RealTimeDemo,
+  MockDataDemo,
   NotFound,
   LoadingFallback,
   preloadCriticalComponents
 } from "./components/LazyComponents";
+import SimpleApp from "./pages/SimpleApp";
 
-const queryClient = new QueryClient();
+const ModernLandingPage = lazy(() => import('@/components/enhanced/ModernLandingPage'));
+const ModernDashboard = lazy(() => import('@/components/enhanced/ModernDashboard'));
+const ModernInvestmentFlow = lazy(() => import('@/components/enhanced/ModernInvestmentFlow'));
+
+const queryClient = createOptimizedQueryClient();
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -45,22 +54,30 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-  // Preload critical components when app starts
+  // Preload critical components and initialize performance monitoring
   useEffect(() => {
     preloadCriticalComponents();
+    initPerformanceMonitoring();
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={<LoadingFallback message="Loading application..." />}>
-              <Routes>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Suspense fallback={<LoadingFallback message="Loading application..." />}>
+                <Routes>
                 {/* Public routes */}
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/simple" element={<SimpleApp />} />
+                <Route path="/welcome" element={
+                  <Suspense fallback={<LoadingFallback message="Launching modern experience..." />}>
+                    <ModernLandingPage onGetStarted={() => {}} />
+                  </Suspense>
+                } />
                 
                 {/* Protected routes */}
                 <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
@@ -119,15 +136,36 @@ const App = () => {
                       <SettingsPage />
                     </Suspense>
                   } />
+                  <Route path="realtime-demo" element={
+                    <Suspense fallback={<LoadingFallback message="Loading real-time demo..." />}>
+                      <RealTimeDemo />
+                    </Suspense>
+                  } />
+                  <Route path="mock-demo" element={
+                    <Suspense fallback={<LoadingFallback message="Loading mock data demo..." />}>
+                      <MockDataDemo />
+                    </Suspense>
+                  } />
+                  <Route path="pro/dashboard" element={
+                    <Suspense fallback={<LoadingFallback message="Loading pro dashboard..." />}>
+                      <ModernDashboard />
+                    </Suspense>
+                  } />
+                  <Route path="pro/invest" element={
+                    <Suspense fallback={<LoadingFallback message="Loading pro investment flow..." />}>
+                      <ModernInvestmentFlow />
+                    </Suspense>
+                  } />
                 </Route>
                 
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 

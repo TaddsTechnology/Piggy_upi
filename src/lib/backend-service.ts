@@ -498,33 +498,468 @@ export class WebhookService {
   }
 }
 
-// Helper function to create a complete user account with demo data
+// Advanced Analytics Service
+export class AnalyticsService {
+  static async getPortfolioPerformance(userId: string, days = 30) {
+    const holdings = await HoldingsService.getUserHoldings(userId)
+    const historicalData = await Promise.all(
+      holdings.map(h => PriceService.getHistoricalPrices(h.symbol, days))
+    )
+
+    return {
+      currentValue: holdings.reduce((sum, h) => sum + (h.units * h.current_price), 0),
+      totalInvested: holdings.reduce((sum, h) => sum + (h.units * h.avg_cost), 0),
+      historicalPerformance: historicalData,
+      assetAllocation: holdings.map(h => ({
+        symbol: h.symbol,
+        percentage: (h.units * h.current_price) / holdings.reduce((sum, holding) => sum + (holding.units * holding.current_price), 0) * 100
+      }))
+    }
+  }
+
+  static async getSpendingAnalytics(userId: string, months = 6) {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('amount, category, merchant, timestamp')
+      .eq('user_id', userId)
+      .eq('direction', 'debit')
+      .gte('timestamp', new Date(Date.now() - months * 30 * 24 * 60 * 60 * 1000).toISOString())
+      .order('timestamp', { ascending: false })
+
+    if (error) throw error
+
+    const transactions = data || []
+    const categorySpending = transactions.reduce((acc, txn) => {
+      const category = txn.category || 'Other'
+      acc[category] = (acc[category] || 0) + txn.amount
+      return acc
+    }, {} as Record<string, number>)
+
+    const merchantSpending = transactions.reduce((acc, txn) => {
+      const merchant = txn.merchant || 'Unknown'
+      acc[merchant] = (acc[merchant] || 0) + txn.amount
+      return acc
+    }, {} as Record<string, number>)
+
+    return {
+      totalSpent: transactions.reduce((sum, txn) => sum + txn.amount, 0),
+      categoryBreakdown: categorySpending,
+      topMerchants: Object.entries(merchantSpending)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5),
+      averageTransactionAmount: transactions.length > 0 
+        ? transactions.reduce((sum, txn) => sum + txn.amount, 0) / transactions.length 
+        : 0,
+      monthlyTrend: this.calculateMonthlyTrend(transactions)
+    }
+  }
+
+  private static calculateMonthlyTrend(transactions: any[]) {
+    const monthlyData = transactions.reduce((acc, txn) => {
+      const month = new Date(txn.timestamp).toISOString().slice(0, 7)
+      acc[month] = (acc[month] || 0) + txn.amount
+      return acc
+    }, {} as Record<string, number>)
+
+    return Object.entries(monthlyData)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, amount]) => ({ month, amount }))
+  }
+}
+
+// Notification Service
+export class NotificationService {
+  static async createNotification(userId: string, type: string, title: string, message: string, metadata?: any) {
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        type,
+        title,
+        message,
+        metadata,
+        read: false
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  }
+
+  static async getUserNotifications(userId: string, unreadOnly = false) {
+    let query = supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (unreadOnly) {
+      query = query.eq('read', false)
+    }
+
+    const { data, error } = await query
+    if (error) throw error
+    return data || []
+  }
+
+  static async markAsRead(notificationId: string) {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', notificationId)
+
+    if (error) throw error
+  }
+
+  // Send investment milestone notifications
+  static async checkAndSendMilestoneNotifications(userId: string) {
+    const holdings = await HoldingsService.getUserHoldings(userId)
+    const totalValue = holdings.reduce((sum, h) => sum + (h.units * h.current_price), 0)
+
+    const milestones = [1000, 5000, 10000, 25000, 50000, 100000]
+    
+    for (const milestone of milestones) {
+      if (totalValue >= milestone) {
+        // Check if we've already sent this notification
+        const existing = await supabase
+          .from('notifications')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('type', 'milestone')
+          .eq('metadata->milestone', milestone)
+          .single()
+
+        if (!existing.data) {
+          await this.createNotification(
+            userId,
+            'milestone',
+            `🎉 Investment Milestone Reached!`,
+            `Congratulations! Your portfolio has reached ₹${milestone.toLocaleString()}`,
+            { milestone, totalValue }
+          )
+        }
+      }
+    }
+  }
+}
+
+// Goal Management Service
+export class GoalService {
+  static async createGoal(userId: string, goal: {
+    name: string
+    targetAmount: number
+    targetDate: string
+    description?: string
+    category?: string
+  }) {
+    const { data, error } = await supabase
+      .from('investment_goals')
+      .insert({
+        user_id: userId,
+        name: goal.name,
+        target_amount: goal.targetAmount,
+        target_date: goal.targetDate,
+        description: goal.description,
+        category: goal.category,
+        current_amount: 0,
+        status: 'active'
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  }
+
+  static async getUserGoals(userId: string) {
+    const { data, error } = await supabase
+      .from('investment_goals')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .order('target_date', { ascending: true })
+
+    if (error) throw error
+    return data || []
+  }
+
+  static async updateGoalProgress(userId: string) {
+    const goals = await this.getUserGoals(userId)
+    const holdings = await HoldingsService.getUserHoldings(userId)
+    const totalPortfolioValue = holdings.reduce((sum, h) => sum + (h.units * h.current_price), 0)
+
+    for (const goal of goals) {
+      // Simple allocation: distribute portfolio value proportionally
+      const progressAmount = totalPortfolioValue * (goal.target_amount / goals.reduce((sum, g) => sum + g.target_amount, 0))
+      
+      await supabase
+        .from('investment_goals')
+        .update({ current_amount: Math.min(progressAmount, goal.target_amount) })
+        .eq('id', goal.id)
+
+      // Check if goal is completed
+      if (progressAmount >= goal.target_amount && goal.status === 'active') {
+        await supabase
+          .from('investment_goals')
+          .update({ status: 'completed' })
+          .eq('id', goal.id)
+
+        await NotificationService.createNotification(
+          userId,
+          'goal_completed',
+          '🎯 Goal Achieved!',
+          `Congratulations! You've reached your goal: ${goal.name}`,
+          { goalId: goal.id, goalName: goal.name }
+        )
+      }
+    }
+  }
+}
+
+// Payment Gateway Integration (Mock)
+export class PaymentGatewayService {
+  // Mock Razorpay integration
+  static async createPaymentOrder(userId: string, amount: number, purpose: string) {
+    // In production, this would call Razorpay API
+    const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    
+    return {
+      id: orderId,
+      amount: amount * 100, // Razorpay uses paisa
+      currency: 'INR',
+      status: 'created',
+      key: process.env.VITE_RAZORPAY_KEY_ID,
+      userId,
+      purpose
+    }
+  }
+
+  static async verifyPayment(paymentId: string, orderId: string, signature: string) {
+    // In production, verify signature with Razorpay webhook
+    console.log('Verifying payment:', { paymentId, orderId, signature })
+    
+    // Mock verification - always success for demo
+    return {
+      verified: true,
+      paymentId,
+      orderId
+    }
+  }
+}
+
+// KYC Service (Mock)
+export class KYCService {
+  static async submitKYCDocuments(userId: string, documents: {
+    panCard?: File
+    aadhaarCard?: File
+    bankStatement?: File
+    selfie?: File
+  }) {
+    // In production, upload to secure storage and submit to KYC provider
+    const kycSubmission = {
+      id: `kyc_${Date.now()}`,
+      user_id: userId,
+      status: 'submitted',
+      documents: Object.keys(documents),
+      submitted_at: new Date().toISOString()
+    }
+
+    // Update user KYC status
+    await supabase
+      .from('users')
+      .update({ kyc_status: 'pending' })
+      .eq('id', userId)
+
+    // Mock verification after 5 seconds (for demo)
+    setTimeout(async () => {
+      await supabase
+        .from('users')
+        .update({ kyc_status: 'verified' })
+        .eq('id', userId)
+
+      await NotificationService.createNotification(
+        userId,
+        'kyc_approved',
+        '✅ KYC Verification Complete',
+        'Your identity has been verified successfully. You can now invest without limits!'
+      )
+    }, 5000)
+
+    return kycSubmission
+  }
+
+  static async checkKYCStatus(userId: string) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('kyc_status')
+      .eq('id', userId)
+      .single()
+
+    if (error) throw error
+    return data.kyc_status
+  }
+}
+
+// Market Data Integration (Enhanced)
+export class MarketDataService {
+  static async fetchLiveETFPrices() {
+    // In production, integrate with NSE/BSE API or financial data provider
+    const symbols = ['NIFTYBEES', 'GOLDBEES', 'LIQUIDBEES', 'BANKBEES']
+    const mockPrices: Record<string, any> = {}
+
+    for (const symbol of symbols) {
+      // Simulate real market data
+      const basePrice = {
+        'NIFTYBEES': 285.50,
+        'GOLDBEES': 65.25,
+        'LIQUIDBEES': 100.05,
+        'BANKBEES': 512.30
+      }[symbol] || 100
+
+      const variation = (Math.random() - 0.5) * 0.04 // ±2% variation
+      const currentPrice = basePrice * (1 + variation)
+      const change = currentPrice - basePrice
+      const changePercent = (change / basePrice) * 100
+
+      mockPrices[symbol] = {
+        symbol,
+        price: Math.round(currentPrice * 100) / 100,
+        change: Math.round(change * 100) / 100,
+        changePercent: Math.round(changePercent * 100) / 100,
+        volume: Math.floor(Math.random() * 1000000) + 100000,
+        timestamp: new Date().toISOString()
+      }
+
+      // Update in database
+      await PriceService.updatePrice(
+        symbol,
+        mockPrices[symbol].price,
+        mockPrices[symbol].change,
+        mockPrices[symbol].changePercent
+      )
+    }
+
+    return mockPrices
+  }
+
+  static async getMarketStatus() {
+    const now = new Date()
+    const hour = now.getHours()
+    const minute = now.getMinutes()
+    const currentTime = hour * 100 + minute
+    
+    // Indian market hours: 9:15 AM - 3:30 PM
+    const isMarketOpen = currentTime >= 915 && currentTime <= 1530
+    
+    return {
+      isOpen: isMarketOpen,
+      nextOpen: isMarketOpen ? null : '9:15 AM tomorrow',
+      nextClose: isMarketOpen ? '3:30 PM today' : null,
+      timezone: 'IST',
+      lastUpdated: now.toISOString()
+    }
+  }
+}
+
+// Comprehensive Demo Data Setup
 export async function setupDemoUser(email: string, password: string, fullName: string) {
   try {
     // Sign up user
     const { user } = await AuthService.signUp(email, password, fullName)
     if (!user) throw new Error('User creation failed')
 
-    // Add some demo transactions
+    // Add realistic demo transactions (last 30 days)
     const demoTransactions = [
-      { merchant: 'Zomato', amount: 247 },
-      { merchant: 'Uber', amount: 156 },
-      { merchant: 'Amazon', amount: 1234 },
-      { merchant: 'BigBasket', amount: 567 },
-      { merchant: 'Swiggy', amount: 89 }
+      { merchant: 'Zomato', amount: 247, category: 'Food & Dining', days: 1 },
+      { merchant: 'Uber', amount: 156, category: 'Transportation', days: 2 },
+      { merchant: 'Amazon', amount: 1234, category: 'Shopping', days: 3 },
+      { merchant: 'BigBasket', amount: 567, category: 'Grocery', days: 4 },
+      { merchant: 'Swiggy', amount: 89, category: 'Food & Dining', days: 5 },
+      { merchant: 'Netflix', amount: 199, category: 'Entertainment', days: 10 },
+      { merchant: 'Flipkart', amount: 799, category: 'Shopping', days: 12 },
+      { merchant: 'BookMyShow', amount: 350, category: 'Entertainment', days: 15 },
+      { merchant: 'Ola', amount: 120, category: 'Transportation', days: 18 },
+      { merchant: 'Starbucks', amount: 285, category: 'Food & Dining', days: 20 }
     ]
 
     for (const txn of demoTransactions) {
-      await TransactionService.simulateTransaction(user.id, txn.amount, txn.merchant)
+      const txnDate = new Date(Date.now() - txn.days * 24 * 60 * 60 * 1000)
+      await supabase.from('transactions').insert({
+        user_id: user.id,
+        amount: txn.amount,
+        direction: 'debit',
+        merchant: txn.merchant,
+        category: txn.category,
+        upi_ref: `UPI${Date.now()}${Math.random().toString(36).substr(2, 6)}`,
+        status: 'completed',
+        timestamp: txnDate.toISOString()
+      })
     }
 
-    // Add some demo holdings
+    // Add demo holdings with realistic performance
     await HoldingsService.updateHolding(user.id, 'NIFTYBEES', 35.42, 278.50)
     await HoldingsService.updateHolding(user.id, 'GOLDBEES', 76.89, 63.20)
+    await HoldingsService.updateHolding(user.id, 'LIQUIDBEES', 12.45, 99.80)
+
+    // Create demo investment goals
+    await GoalService.createGoal(user.id, {
+      name: 'Emergency Fund',
+      targetAmount: 50000,
+      targetDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+      description: 'Build an emergency fund covering 6 months expenses',
+      category: 'Safety'
+    })
+
+    await GoalService.createGoal(user.id, {
+      name: 'Vacation Trip',
+      targetAmount: 25000,
+      targetDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString(),
+      description: 'Save for a trip to Goa',
+      category: 'Lifestyle'
+    })
+
+    // Send welcome notification
+    await NotificationService.createNotification(
+      user.id,
+      'welcome',
+      '🎉 Welcome to UPI Piggy!',
+      'Start saving automatically with every UPI transaction. Your spare change is now working for you!'
+    )
 
     return user
   } catch (error) {
     console.error('Demo user setup failed:', error)
     throw error
+  }
+}
+
+// Real-time data sync service
+export class RealtimeService {
+  private static subscriptions: any[] = []
+
+  static subscribeToUserData(userId: string, callback: (table: string, payload: any) => void) {
+    const tables = ['transactions', 'piggy_ledger', 'holdings', 'orders', 'notifications']
+    
+    tables.forEach(table => {
+      const subscription = supabase
+        .channel(`${table}_${userId}`)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table,
+          filter: `user_id=eq.${userId}`
+        }, (payload) => {
+          callback(table, payload)
+        })
+        .subscribe()
+
+      this.subscriptions.push(subscription)
+    })
+  }
+
+  static unsubscribeAll() {
+    this.subscriptions.forEach(sub => sub.unsubscribe())
+    this.subscriptions = []
   }
 }

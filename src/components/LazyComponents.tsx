@@ -13,6 +13,8 @@ export const MarketsPage = lazy(() => import('../pages/MarketsPage'));
 export const InvestmentPage = lazy(() => import('../pages/InvestmentPage'));
 export const AuthPage = lazy(() => import('../pages/AuthPage'));
 export const KYCPage = lazy(() => import('../pages/KYCPage'));
+export const RealTimeDemo = lazy(() => import('../pages/RealTimeDemo'));
+export const MockDataDemo = lazy(() => import('../components/MockDataDemo'));
 export const NotFound = lazy(() => import('../pages/NotFound'));
 
 // Chart components - loaded only when needed

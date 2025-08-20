@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// import MarketTicker from "@/components/MarketTicker";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -51,6 +52,12 @@ const MarketsPage = () => {
   const MarketOverview = () => (
     <div className="space-y-6">
       <MarketStatus showDetailedView={true} />
+      
+      {/* Real-Time Market Ticker - Coming Soon */}
+      <div className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-200 rounded-xl p-4">
+        <h3 className="font-bold text-purple-800 mb-2">🚀 Real-Time Market Ticker</h3>
+        <p className="text-sm text-purple-700">Live scrolling ticker with real-time price updates coming soon!</p>
+      </div>
       
       {/* Market Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

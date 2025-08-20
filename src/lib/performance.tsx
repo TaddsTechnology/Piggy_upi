@@ -1,14 +1,16 @@
-// Performance monitoring and optimization utilities
-import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
+// Advanced Performance monitoring and optimization utilities
+import { onCLS, onINP, onFCP, onLCP, onTTFB } from 'web-vitals';
+import React from 'react';
+import { QueryClient } from '@tanstack/react-query';
 
 // Web Vitals monitoring
 export const measureWebVitals = () => {
   if (typeof window !== 'undefined') {
-    getCLS(console.log);
-    getFID(console.log);
-    getFCP(console.log);
-    getLCP(console.log);
-    getTTFB(console.log);
+    onCLS(console.log);
+    onINP(console.log); // INP replaced FID in web-vitals v3+
+    onFCP(console.log);
+    onLCP(console.log);
+    onTTFB(console.log);
   }
 };
 
@@ -306,7 +308,7 @@ export const checkPerformanceBudget = (): {
   }
 
   // LCP budget (2.5s)
-  getLCP((metric) => {
+  onLCP((metric) => {
     if (metric.value > 2500) {
       violations.push(`LCP (${metric.value}ms) exceeds budget (2500ms)`);
     }
@@ -318,17 +320,166 @@ export const checkPerformanceBudget = (): {
   };
 };
 
+// React hook for performance tracking
+export const usePerformanceTracking = (componentName: string) => {
+  const renderStartTime = React.useRef<number>();
+  const monitor = PerformanceMonitor.getInstance();
+  
+  React.useLayoutEffect(() => {
+    renderStartTime.current = performance.now();
+  });
+  
+  React.useEffect(() => {
+    if (renderStartTime.current) {
+      const renderTime = performance.now() - renderStartTime.current;
+      monitor.recordMetric(`${componentName}.renderTime`, renderTime);
+      
+      // Warn for slow renders
+      if (renderTime > 100) {
+        console.warn(`🐌 Slow render: ${componentName} took ${renderTime.toFixed(2)}ms`);
+      }
+    }
+  });
+};
+
+// Advanced API call tracking
+export const trackApiCall = async <T,>(
+  name: string,
+  apiCall: () => Promise<T>
+): Promise<T> => {
+  const monitor = PerformanceMonitor.getInstance();
+  const startTime = performance.now();
+  
+  try {
+    const result = await apiCall();
+    const duration = performance.now() - startTime;
+    monitor.recordMetric(`api.${name}.success`, duration);
+    
+    if (duration > 2000) {
+      console.warn(`🐌 Slow API call: ${name} took ${duration.toFixed(2)}ms`);
+    }
+    
+    return result;
+  } catch (error) {
+    const duration = performance.now() - startTime;
+    monitor.recordMetric(`api.${name}.error`, duration);
+    throw error;
+  }
+};
+
+// User interaction tracking
+export const trackUserInteraction = (eventName: string, metadata?: Record<string, any>) => {
+  const monitor = PerformanceMonitor.getInstance();
+  const timestamp = performance.now();
+  
+  monitor.recordMetric(`interaction.${eventName}`, timestamp);
+  
+  // Log user interaction patterns in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`👆 User interaction: ${eventName}`, metadata);
+  }
+};
+
+// Component lazy loading tracker
+export const trackLazyComponentLoad = (componentName: string) => {
+  const monitor = PerformanceMonitor.getInstance();
+  const loadTime = performance.now();
+  
+  monitor.recordMetric(`lazy.${componentName}.load`, loadTime);
+  console.log(`📦 Lazy component loaded: ${componentName}`);
+};
+
+// Error tracking with performance context
+export const trackError = (error: Error, context?: Record<string, any>) => {
+  const monitor = PerformanceMonitor.getInstance();
+  const memory = getMemoryUsage();
+  
+  const errorContext = {
+    message: error.message,
+    stack: error.stack,
+    timestamp: Date.now(),
+    url: window.location.href,
+    userAgent: navigator.userAgent,
+    memory: memory ? {
+      used: Math.round(memory.usedJSHeapSize / 1024 / 1024),
+      total: Math.round(memory.totalJSHeapSize / 1024 / 1024),
+      limit: Math.round(memory.jsHeapSizeLimit / 1024 / 1024)
+    } : null,
+    performanceMetrics: monitor.getAllMetrics(),
+    ...context
+  };
+  
+  console.error('🚨 Error with performance context:', errorContext);
+  
+  // In production, send to error monitoring service
+  // Example: Sentry.captureException(error, { extra: errorContext });
+};
+
+// Performance dashboard for development
+export const getPerformanceDashboard = () => {
+  const monitor = PerformanceMonitor.getInstance();
+  const memory = getMemoryUsage();
+  
+  return {
+    timestamp: new Date().toISOString(),
+    metrics: monitor.getAllMetrics(),
+    memory: memory ? {
+      used: `${Math.round(memory.usedJSHeapSize / 1024 / 1024)}MB`,
+      total: `${Math.round(memory.totalJSHeapSize / 1024 / 1024)}MB`,
+      limit: `${Math.round(memory.jsHeapSizeLimit / 1024 / 1024)}MB`,
+      percentage: `${Math.round((memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100)}%`
+    } : null,
+    recommendations: generatePerformanceRecommendations(monitor.getAllMetrics())
+  };
+};
+
+// Generate performance recommendations
+const generatePerformanceRecommendations = (metrics: Record<string, any>): string[] => {
+  const recommendations: string[] = [];
+  
+  Object.entries(metrics).forEach(([name, stats]) => {
+    if (stats && stats.avg) {
+      if (name.includes('renderTime') && stats.avg > 50) {
+        recommendations.push(`Consider optimizing ${name.replace('.renderTime', '')} component - average render time is ${stats.avg.toFixed(2)}ms`);
+      }
+      
+      if (name.includes('api') && stats.avg > 1000) {
+        recommendations.push(`API call ${name} is slow - average response time is ${stats.avg.toFixed(2)}ms`);
+      }
+    }
+  });
+  
+  return recommendations;
+};
+
 // Initialize performance monitoring
 export const initPerformanceMonitoring = () => {
   measureWebVitals();
   addResourceHints();
   registerServiceWorker();
   
-  // Log performance metrics every 30 seconds in development
+  // Enhanced development logging
   if (process.env.NODE_ENV === 'development') {
+    // Log performance dashboard every 30 seconds
     setInterval(() => {
-      const monitor = PerformanceMonitor.getInstance();
-      console.table(monitor.getAllMetrics());
+      const dashboard = getPerformanceDashboard();
+      console.group('📊 Performance Dashboard');
+      console.table(dashboard.metrics);
+      if (dashboard.memory) {
+        console.log('🧠 Memory Usage:', dashboard.memory);
+      }
+      if (dashboard.recommendations.length > 0) {
+        console.warn('💡 Recommendations:', dashboard.recommendations);
+      }
+      console.groupEnd();
     }, 30000);
+    
+    // Warn about performance budget violations
+    setTimeout(() => {
+      const budget = checkPerformanceBudget();
+      if (!budget.passed) {
+        console.warn('⚠️ Performance Budget Violations:', budget.violations);
+      }
+    }, 5000);
   }
 };

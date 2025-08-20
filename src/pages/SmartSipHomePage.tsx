@@ -157,6 +157,15 @@ const SmartSipHomePage = () => {
               <Button 
                 variant="outline" 
                 size="sm"
+                onClick={() => navigate('/mock-demo')}
+                className="gap-2 hidden xl:flex bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 hover:from-purple-700 hover:to-pink-700"
+              >
+                <Sparkles size={16} />
+                Mock Data Demo
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
                 onClick={() => navigate('/dashboard')}
                 className="gap-2 hidden xl:flex"
               >
@@ -167,8 +176,17 @@ const SmartSipHomePage = () => {
             </div>
           </div>
           
-          {/* Mobile navigation button */}
-          <div className="flex justify-center mb-4 xl:hidden">
+          {/* Mobile navigation buttons */}
+          <div className="flex justify-center gap-2 mb-4 xl:hidden">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/mock-demo')}
+              className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 hover:from-purple-700 hover:to-pink-700"
+            >
+              <Sparkles size={16} />
+              Mock Demo
+            </Button>
             <Button 
               variant="outline" 
               size="sm"
@@ -176,7 +194,7 @@ const SmartSipHomePage = () => {
               className="gap-2"
             >
               <BarChart3 size={16} />
-              View Traditional Dashboard
+              Dashboard
             </Button>
           </div>
         </div>

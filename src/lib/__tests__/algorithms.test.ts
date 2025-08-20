@@ -166,27 +166,29 @@ describe('InvestmentSweeper', () => {
       const orders = sweeper.createOrders(balance, prices);
       expect(orders).toHaveLength(2);
 
-      // Check NIFTY allocation (70%)
+      // Check NIFTY allocation (70% = 700, but can only buy 2 units = 571)
       const niftyOrder = orders.find(o => o.symbol === 'NIFTYBEES');
       expect(niftyOrder).toBeDefined();
-      expect(niftyOrder?.amount).toBeCloseTo(700 * niftyOrder!.quantity / Math.floor(700 / 285.50), 1);
+      expect(niftyOrder?.quantity).toBe(2); // Math.floor(700 / 285.50)
+      expect(niftyOrder?.amount).toBe(571); // 2 * 285.50
 
-      // Check GOLD allocation (30%)
+      // Check GOLD allocation (30% = 300, can buy 4 units = 261)
       const goldOrder = orders.find(o => o.symbol === 'GOLDBEES');
       expect(goldOrder).toBeDefined();
+      expect(goldOrder?.quantity).toBe(4); // Math.floor(300 / 65.25)
+      expect(goldOrder?.amount).toBe(261); // 4 * 65.25
     });
 
     it('should skip allocations with insufficient balance', () => {
       const prices = {
-        'NIFTYBEES': 1000, // Price too high
-        'GOLDBEES': 65.25
+        'NIFTYBEES': 1000, // Price too high (70% of 100 = 70, can't buy 1 unit)
+        'GOLDBEES': 65.25  // Price too high (30% of 100 = 30, can't buy 1 unit)
       };
       const balance = 100;
 
       const orders = sweeper.createOrders(balance, prices);
-      // Should only have GOLD order since NIFTY is too expensive
-      expect(orders).toHaveLength(1);
-      expect(orders[0].symbol).toBe('GOLDBEES');
+      // Should have no orders since allocations are too small for minimum units
+      expect(orders).toHaveLength(0);
     });
   });
 });

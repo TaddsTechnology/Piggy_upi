@@ -68,12 +68,24 @@ export class RoundupCalculator {
 
   calculateRoundup(amount: number): number {
     const r = this.rule.roundToNearest;
-    const mod = amount % r;
-    const roundup = (r - mod) % r;
+    
+    // Handle decimal amounts by rounding to 2 decimal places first
+    const roundedAmount = Math.round(amount * 100) / 100;
+    
+    // Calculate the remainder when dividing by the round-to-nearest value
+    const mod = roundedAmount % r;
+    
+    // If already rounded to the nearest value, no roundup needed
+    if (mod === 0) {
+      return 0;
+    }
+    
+    // Calculate roundup amount
+    const roundup = r - mod;
     
     // Only return roundup if it's within bounds
     if (roundup >= this.rule.minRoundup && roundup <= this.rule.maxRoundup) {
-      return roundup;
+      return Math.round(roundup * 100) / 100; // Round to 2 decimal places
     }
     return 0;
   }
@@ -130,12 +142,14 @@ export class InvestmentSweeper {
     const orders: Order[] = [];
     
     for (const allocation of this.allocations) {
-      const allocAmount = Math.floor(balance * allocation.weightPct / 100);
+      const allocAmount = balance * allocation.weightPct / 100;
       const price = prices[allocation.symbol];
       
       if (!price || allocAmount < price) continue; // Skip if not enough for even 1 unit
       
-      const units = Math.floor((allocAmount / price) * 1000000) / 1000000; // 6 decimal precision
+      const units = Math.floor(allocAmount / price);
+      if (units <= 0) continue; // Skip if can't buy any whole units
+      
       const totalAmount = units * price;
       
       orders.push({

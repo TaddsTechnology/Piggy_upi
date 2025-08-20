@@ -12,6 +12,59 @@
 
 UPI Piggy automatically rounds up your UPI transactions and invests the spare change into diversified ETF portfolios. Turn every ₹127 transaction into ₹130 and invest the ₹3 difference!
 
+### 🎯 **NEW: Simplified User-Friendly Version**
+
+We've created a **completely simplified and user-friendly version** of Piggy that makes investing accessible to everyone! 🌟
+
+**🔗 Try it now: Visit `/simple` route in your app**
+
+#### What's Different in the Simple Version?
+- ✅ **Plain English explanations** - No confusing financial jargon
+- ✅ **Step-by-step onboarding** - 5 simple questions, takes 2 minutes
+- ✅ **Visual progress tracking** - See your money grow with clear charts
+- ✅ **Real examples** - "Meet Priya" stories that everyone can relate to
+- ✅ **Built-in help** - Comprehensive FAQ with simple answers
+- ✅ **Interactive demo** - Try adding transactions and see how roundups work
+- ✅ **Mobile-first design** - Perfect for smartphone users
+- ✅ **Achievement system** - Celebrate small wins to stay motivated
+- ✅ **Full Investment Flow** - Complete portfolio selection and investment process
+- ✅ **Real-time Portfolio Tracking** - Live NAV updates and performance metrics
+- ✅ **Mock Investment API** - Realistic investment simulation for testing
+
+### 🚀 **NEW: Professional Modern Design**
+
+We've enhanced the app with **cutting-edge professional designs** that rival top fintech apps! ✨
+
+**🔗 Experience the future: Visit `/welcome` for modern landing page**
+
+#### Professional Design Features:
+- 🎨 **Modern Landing Page** (`/welcome`) - Sleek animations, testimonials, and professional hero sections
+- 📊 **Enhanced Dashboard** (`/pro/dashboard`) - Advanced analytics, goal tracking, and performance metrics
+- 💼 **Professional Investment Flow** (`/pro/invest`) - Multi-step guided investment with portfolio selection
+- 🌟 **Glass Morphism Effects** - Modern UI with backdrop blur and transparency
+- 📱 **Responsive Excellence** - Perfect across all devices from mobile to desktop
+- ⚡ **Micro-interactions** - Smooth animations and hover effects
+- 🎯 **Data Visualization** - Interactive charts and progress indicators
+- 🏆 **Premium UX** - Industry-leading user experience patterns
+
+### 💰 **NEW: Complete Investment Features**
+
+#### Portfolio Selection & Investment Flow
+- 🏦 **3 Portfolio Options**: Conservative (8-10%), Balanced (10-14%), Aggressive (12-18%)
+- 📊 **Real-time NAV Updates**: Live pricing with realistic market fluctuations
+- 💳 **Complete Investment Process**: 4-step guided investment flow
+- 📈 **Portfolio Analytics**: Detailed holdings, returns, and performance tracking
+- ⚡ **Mock Payment Integration**: UPI payment simulation
+- 🔔 **Smart Notifications**: Success/error feedback with investment details
+
+#### Mock Investment API Features
+- 💹 **Realistic Market Data**: Simulated NAV fluctuations and market hours
+- 📊 **Portfolio Management**: Holdings tracking, investment history
+- 🔄 **Real-time Updates**: Live price feeds every 5 seconds
+- 💰 **SIP Integration**: Systematic Investment Plan setup
+- 📈 **Performance Metrics**: Returns calculation, day/total change tracking
+- 🛡️ **Market Status**: Trading hours simulation with status messages
+
 ### **🎯 Key Features**
 
 - 🔄 **Automatic Round-Up**: Round transactions to nearest ₹10/20/50/100

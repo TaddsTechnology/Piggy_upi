@@ -98,7 +98,14 @@ const HomePage = () => {
                       {piggyState.portfolioValue.toLocaleString('en-IN')}
                     </span>
                   </div>
-                  <p className="text-white/70 text-sm mt-1">Your wealth is growing!</p>
+                  <p className="text-white/70 text-sm mt-1 flex items-center gap-1">
+                    📈 Your wealth is growing! 
+                    {piggyState.piggyBalance >= 10 && (
+                      <span className="bg-white/20 px-2 py-1 rounded text-xs ml-2">
+                        Ready to invest
+                      </span>
+                    )}
+                  </p>
                 </div>
                 <div className="text-right">
                   <div className="bg-white/20 text-white border border-white/30 px-3 py-2 rounded-full text-sm font-semibold">
@@ -160,7 +167,7 @@ const HomePage = () => {
             size="lg" 
             className="w-full h-14 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-heading font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
             onClick={() => {
-              if (piggyState.piggyBalance >= 50) {
+              if (piggyState.piggyBalance >= 10) {
                 navigate('/invest');
               } else {
                 // Simulate adding some transactions to build balance
@@ -178,7 +185,7 @@ const HomePage = () => {
           >
             <div className="flex items-center gap-2">
               <TrendingUp size={18} />
-              {piggyState.piggyBalance >= 50 ? 'Invest Now' : 'Build Balance First'}
+              {piggyState.piggyBalance >= 10 ? '💰 Invest Now' : '🔄 Build Balance First'}
             </div>
           </Button>
         )}
@@ -246,13 +253,23 @@ const HomePage = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-heading font-medium">Quick Stats</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => piggyActions.refreshPrices()}
-                >
-                  Refresh
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => navigate('/portfolio')}
+                    className="text-xs"
+                  >
+                    📊 Portfolio
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => piggyActions.refreshPrices()}
+                  >
+                    Refresh
+                  </Button>
+                </div>
               </div>
               <div className="space-y-4">
                 <div className="flex justify-between">
