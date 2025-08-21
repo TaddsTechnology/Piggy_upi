@@ -488,39 +488,52 @@ async function handleBackgroundSync() {
   }
 }
 
-// Push notification handler
+// Push notification handler - Enhanced
 self.addEventListener('push', (event) => {
-  const options = {
+  console.log('📱 Service Worker: Push notification received');
+  
+  let notificationData = {
+    title: 'UPI Piggy',
     body: 'Your piggy bank has new updates!',
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
-    vibrate: [100, 50, 100],
+    icon: '/piggy.png',
+    badge: '/piggy.png',
+    vibrate: [200, 100, 200],
     data: {
       dateOfArrival: Date.now(),
-      primaryKey: 1
+      primaryKey: Date.now()
     },
     actions: [
       {
-        action: 'explore',
-        title: 'Open App',
-        icon: '/icons/checkmark.png'
+        action: 'view',
+        title: 'View',
+        icon: '/piggy.png'
       },
       {
-        action: 'close',
-        title: 'Close',
-        icon: '/icons/xmark.png'
+        action: 'dismiss',
+        title: 'Dismiss'
       }
-    ]
+    ],
+    requireInteraction: false,
+    silent: false
   };
   
-  if (event.data) {
-    const payload = event.data.json();
-    options.body = payload.body || options.body;
-    options.title = payload.title || 'UPI Piggy';
+  try {
+    if (event.data) {
+      const payload = event.data.json();
+      notificationData = {
+        ...notificationData,
+        ...payload,
+        title: payload.title || notificationData.title,
+        body: payload.message || payload.body || notificationData.body,
+        requireInteraction: payload.priority === 'urgent'
+      };
+    }
+  } catch (error) {
+    console.error('Service Worker: Error parsing push data:', error);
   }
   
   event.waitUntil(
-    self.registration.showNotification('UPI Piggy', options)
+    self.registration.showNotification(notificationData.title, notificationData)
   );
 });
 
