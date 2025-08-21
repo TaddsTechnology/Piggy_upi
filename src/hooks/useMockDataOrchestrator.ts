@@ -76,8 +76,10 @@ export function useDemoUser(userType: 'conservative' | 'moderate' | 'aggressive'
 
   useEffect(() => {
     // Auto-create demo user on mount
-    createDemoUser();
-  }, [createDemoUser]);
+    if (!userData) {
+      createDemoUser();
+    }
+  }, [userData, createDemoUser]);
 
   return {
     userData,
@@ -163,15 +165,23 @@ export function useTransactionSimulator(userId?: string) {
   };
 }
 
+// Default symbols constant to prevent recreation
+const DEFAULT_SYMBOLS = ['NIFTY50', 'SENSEX'];
+
 // Hook for market data with live updates
-export function useRealtimeMarketData(symbols: string[] = ['NIFTY50', 'SENSEX']) {
+export function useRealtimeMarketData(symbols: string[] = DEFAULT_SYMBOLS) {
   const [marketData, setMarketData] = useState<Map<string, any>>(new Map());
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  
+  // Memoize symbols to prevent infinite re-renders
+  const symbolsString = JSON.stringify(symbols);
 
   useEffect(() => {
+    const currentSymbols = JSON.parse(symbolsString);
+    
     // Subscribe to market data updates
-    const subscriptionId = mockRealTimeData.subscribe(symbols, (data) => {
+    const subscriptionId = mockRealTimeData.subscribe(currentSymbols, (data) => {
       setMarketData(new Map(data.map(item => [item.symbol, item])));
       setLastUpdate(new Date());
       setIsConnected(true);
@@ -184,7 +194,7 @@ export function useRealtimeMarketData(symbols: string[] = ['NIFTY50', 'SENSEX'])
     };
 
     // Initial fetch
-    symbols.forEach(symbol => {
+    currentSymbols.forEach(symbol => {
       const price = mockRealTimeData.getCurrentPrice(symbol);
       if (price) {
         setMarketData(prev => new Map(prev.set(symbol, price)));
@@ -197,7 +207,7 @@ export function useRealtimeMarketData(symbols: string[] = ['NIFTY50', 'SENSEX'])
       unsubscribe?.();
       setIsConnected(false);
     };
-  }, [symbols]);
+  }, [symbolsString]);
 
   const getCurrentPrice = useCallback((symbol: string) => {
     return marketData.get(symbol) || mockRealTimeData.getCurrentPrice(symbol);

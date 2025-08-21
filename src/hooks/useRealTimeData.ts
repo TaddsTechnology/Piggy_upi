@@ -73,17 +73,34 @@ export const useRealTimeData = (symbols, options = {}) => {
     setTimeout(start, 100); // Small delay to ensure cleanup
   }, [stop, start]);
 
-  // Auto-start effect
+  // Auto-start effect - use a more stable approach
   useEffect(() => {
-    if (autoStart && symbols && symbols.length > 0) {
-      start();
+    if (!autoStart || !symbols || symbols.length === 0) return;
+
+    // Direct subscription without relying on start/stop functions
+    try {
+      // Cleanup existing subscription
+      if (subscriptionIdRef.current) {
+        mockRealTimeData.unsubscribe(subscriptionIdRef.current);
+      }
+
+      // Create new subscription
+      subscriptionIdRef.current = mockRealTimeData.subscribe(symbols, handleUpdate);
+      setIsConnected(true);
+      setError(null);
+    } catch (err) {
+      handleError(err);
     }
 
-    // Cleanup on unmount
+    // Cleanup on unmount or dependency change
     return () => {
-      stop();
+      if (subscriptionIdRef.current) {
+        mockRealTimeData.unsubscribe(subscriptionIdRef.current);
+        subscriptionIdRef.current = null;
+        setIsConnected(false);
+      }
     };
-  }, [symbols, autoStart, start, stop]);
+  }, [symbols, autoStart, handleUpdate, handleError]);
 
   return {
     data,
@@ -127,7 +144,7 @@ export const useMarketSummary = (refreshInterval = 10000) => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [fetchSummary, refreshInterval]);
+  }, [refreshInterval, fetchSummary]);
 
   return {
     summary,
@@ -253,7 +270,7 @@ export const useMarketNews = (refreshInterval = 30000) => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [fetchNews, refreshInterval]);
+  }, [refreshInterval, fetchNews]);
 
   return {
     news,

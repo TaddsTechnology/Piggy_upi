@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Shield, IndianRupee, TrendingUp, Smartphone } from 'lucide-react';
+import { Loader2, Shield, TrendingUp, Smartphone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const AuthPage = () => {
@@ -77,10 +77,20 @@ const AuthPage = () => {
         {/* Left Side - Marketing */}
         <div className="hidden lg:block space-y-8">
           <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-growth rounded-full flex items-center justify-center mx-auto mb-4">
-              <IndianRupee className="text-white" size={32} />
+            <div className="w-16 h-16 bg-gradient-growth rounded-full flex items-center justify-center mx-auto mb-4 p-2">
+              <img 
+                src="/piggy.png" 
+                alt="Piggy UPI" 
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  console.error('Failed to load Piggy UPI logo on auth page');
+                  // Fallback to text if image fails
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML = '<div class="text-white font-bold text-lg">P</div>';
+                }}
+              />
             </div>
-            <h1 className="text-4xl font-heading font-bold text-primary mb-2">UPI Piggy</h1>
+            <h1 className="text-4xl font-heading font-bold text-primary mb-2">Piggy UPI</h1>
             <p className="text-xl text-muted-foreground">Smart Investment, Spare Change</p>
           </div>
 
@@ -132,8 +142,20 @@ const AuthPage = () => {
         <div className="w-full max-w-md mx-auto">
           <Card>
             <CardHeader className="text-center">
+              {/* Small logo in the card header */}
+              <div className="flex justify-center mb-4">
+                <img 
+                  src="/piggy.png" 
+                  alt="Piggy UPI" 
+                  className="w-8 h-8 object-contain"
+                  onError={(e) => {
+                    console.error('Failed to load Piggy UPI logo in auth card');
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
               <CardTitle className="text-2xl font-heading">
-                {activeTab === 'signin' ? 'Welcome back' : 'Start investing today'}
+                {activeTab === 'signin' ? 'Welcome back to Piggy UPI' : 'Join Piggy UPI today'}
               </CardTitle>
               <p className="text-muted-foreground">
                 {activeTab === 'signin' 

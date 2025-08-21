@@ -88,14 +88,14 @@ export const MarketStatus = ({
         </Card>
 
         {/* ETF Prices */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {symbols.map(symbol => {
             const data = marketState.data[symbol];
             const isPositive = data ? data.changePercent >= 0 : true;
             
             return (
               <Card key={symbol}>
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium">{symbol}</h4>
                     {data ? (
@@ -108,7 +108,7 @@ export const MarketStatus = ({
                   {data ? (
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-2xl font-bold">
+                        <span className="text-lg sm:text-2xl font-bold">
                           {formatCurrency(data.price)}
                         </span>
                         {isPositive ? (

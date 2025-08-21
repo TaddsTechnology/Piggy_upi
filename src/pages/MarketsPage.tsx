@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import MarketTicker from "@/components/MarketTicker";
+import MarketTicker from "@/components/MarketTicker";
+import MockDataDemo from "@/components/MockDataDemo";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { MarketStatus } from "@/components/MarketStatus";
 import { useMarketData, useSymbolSearch } from "@/hooks/use-market-data";
-import { formatCurrency, formatPercentage } from "@/lib/yahoo-finance-api";
+import { formatCurrency } from "@/lib/yahoo-finance-api";
 import { INDIAN_ETF_SYMBOLS } from "@/lib/yahoo-finance-api";
 
 const MarketsPage = () => {
@@ -53,29 +53,28 @@ const MarketsPage = () => {
     <div className="space-y-6">
       <MarketStatus showDetailedView={true} />
       
-      {/* Real-Time Market Ticker - Coming Soon */}
-      <div className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-200 rounded-xl p-4">
-        <h3 className="font-bold text-purple-800 mb-2">🚀 Real-Time Market Ticker</h3>
-        <p className="text-sm text-purple-700">Live scrolling ticker with real-time price updates coming soon!</p>
+      {/* Live Market Ticker */}
+      <div className="mb-6">
+        <MarketTicker className="w-full" />
       </div>
       
       {/* Market Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Active Trading Card */}
         <Card className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-purple-500 to-blue-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
           <div className="absolute inset-0">
             <div className="absolute top-2 right-2 w-12 h-12 bg-white/10 rounded-full blur-lg animate-pulse"></div>
             <div className="absolute bottom-2 left-2 w-8 h-8 bg-white/5 rounded-full blur-md animate-bounce"></div>
           </div>
-          <CardContent className="relative p-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="bg-white/20 p-2 rounded-xl">
-                <Activity className="h-5 w-5 text-white" />
+          <CardContent className="relative p-4 sm:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
+              <div className="bg-white/20 p-1.5 sm:p-2 rounded-xl">
+                <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
-              <span className="text-sm font-semibold text-white/90">📊 Active Trading</span>
+              <span className="text-xs sm:text-sm font-semibold text-white/90">📊 Active Trading</span>
             </div>
             <div>
-              <span className="text-3xl font-bold tracking-tight">
+              <span className="text-2xl sm:text-3xl font-bold tracking-tight">
                 {Object.values(marketState.data).filter(data => data !== null).length}
               </span>
               <p className="text-xs text-white/80 mt-1">ETFs tracked</p>
@@ -89,15 +88,15 @@ const MarketsPage = () => {
             <div className="absolute top-2 right-2 w-12 h-12 bg-white/10 rounded-full blur-lg animate-pulse"></div>
             <div className="absolute bottom-2 left-2 w-8 h-8 bg-white/5 rounded-full blur-md animate-bounce"></div>
           </div>
-          <CardContent className="relative p-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="bg-white/20 p-2 rounded-xl">
-                <TrendingUp className="h-5 w-5 text-white animate-pulse" />
+          <CardContent className="relative p-4 sm:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
+              <div className="bg-white/20 p-1.5 sm:p-2 rounded-xl">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-white animate-pulse" />
               </div>
-              <span className="text-sm font-semibold text-white/90">📈 Gainers</span>
+              <span className="text-xs sm:text-sm font-semibold text-white/90">📈 Gainers</span>
             </div>
             <div>
-              <span className="text-3xl font-bold tracking-tight">
+              <span className="text-2xl sm:text-3xl font-bold tracking-tight">
                 {Object.values(marketState.data).filter(data => data && data.changePercent > 0).length}
               </span>
               <p className="text-xs text-white/80 mt-1">ETFs up today</p>
@@ -111,15 +110,15 @@ const MarketsPage = () => {
             <div className="absolute top-2 right-2 w-12 h-12 bg-white/10 rounded-full blur-lg animate-pulse"></div>
             <div className="absolute bottom-2 left-2 w-8 h-8 bg-white/5 rounded-full blur-md animate-bounce"></div>
           </div>
-          <CardContent className="relative p-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="bg-white/20 p-2 rounded-xl">
-                <TrendingDown className="h-5 w-5 text-white animate-pulse" />
+          <CardContent className="relative p-4 sm:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
+              <div className="bg-white/20 p-1.5 sm:p-2 rounded-xl">
+                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-white animate-pulse" />
               </div>
-              <span className="text-sm font-semibold text-white/90">📉 Decliners</span>
+              <span className="text-xs sm:text-sm font-semibold text-white/90">📉 Decliners</span>
             </div>
             <div>
-              <span className="text-3xl font-bold tracking-tight">
+              <span className="text-2xl sm:text-3xl font-bold tracking-tight">
                 {Object.values(marketState.data).filter(data => data && data.changePercent < 0).length}
               </span>
               <p className="text-xs text-white/80 mt-1">ETFs down today</p>
@@ -133,15 +132,15 @@ const MarketsPage = () => {
             <div className="absolute top-2 right-2 w-12 h-12 bg-white/10 rounded-full blur-lg animate-pulse"></div>
             <div className="absolute bottom-2 left-2 w-8 h-8 bg-white/5 rounded-full blur-md animate-bounce"></div>
           </div>
-          <CardContent className="relative p-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="bg-white/20 p-2 rounded-xl">
-                <Clock className="h-5 w-5 text-white animate-pulse" />
+          <CardContent className="relative p-4 sm:p-6">
+            <div className="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
+              <div className="bg-white/20 p-1.5 sm:p-2 rounded-xl">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-white animate-pulse" />
               </div>
-              <span className="text-sm font-semibold text-white/90">⏰ Last Updated</span>
+              <span className="text-xs sm:text-sm font-semibold text-white/90">⏰ Last Updated</span>
             </div>
             <div>
-              <span className="text-lg font-bold tracking-tight">
+              <span className="text-lg sm:text-xl font-bold tracking-tight">
                 {marketState.lastUpdated?.toLocaleTimeString() || 'Never'}
               </span>
               <p className="text-xs text-white/80 mt-1">Real-time data</p>
@@ -440,23 +439,35 @@ const MarketsPage = () => {
   );
 
   return (
-    <div className="container-mobile xl:container xl:py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
-          Indian Markets 📊
-        </h1>
-        <p className="text-muted-foreground">
-          Real-time ETF prices and market data powered by Yahoo Finance
-        </p>
-      </div>
+    <div className="w-full min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        {/* Header with Piggy Logo */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+            <img 
+              src="/piggy.png" 
+              alt="Piggy UPI" 
+              className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
+            />
+            <div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold text-foreground">
+                Indian Markets 📊
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Real-time ETF prices and market data powered by Yahoo Finance
+              </p>
+            </div>
+          </div>
+        </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="etfs">ETFs</TabsTrigger>
-          <TabsTrigger value="search">Search</TabsTrigger>
-          <TabsTrigger value="insights">Insights</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto p-1">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-4 py-2">Overview</TabsTrigger>
+            <TabsTrigger value="etfs" className="text-xs sm:text-sm px-2 sm:px-4 py-2">ETFs</TabsTrigger>
+            <TabsTrigger value="search" className="text-xs sm:text-sm px-2 sm:px-4 py-2">Search</TabsTrigger>
+            <TabsTrigger value="insights" className="text-xs sm:text-sm px-2 sm:px-4 py-2">Insights</TabsTrigger>
+            <TabsTrigger value="live-demo" className="text-xs sm:text-sm px-2 sm:px-4 py-2 col-span-2 sm:col-span-1">🎮 Live Demo</TabsTrigger>
+          </TabsList>
         
         <TabsContent value="overview">
           <MarketOverview />
@@ -473,7 +484,12 @@ const MarketsPage = () => {
         <TabsContent value="insights">
           <MarketInsights />
         </TabsContent>
-      </Tabs>
+        
+        <TabsContent value="live-demo">
+          <MockDataDemo />
+        </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };

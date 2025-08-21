@@ -1,5 +1,5 @@
 // Lazy loading components for better performance
-import { lazy } from 'react';
+import React, { lazy } from 'react';
 
 // Page components - loaded only when needed
 export const HomePage = lazy(() => import('../pages/HomePage'));
@@ -16,6 +16,9 @@ export const KYCPage = lazy(() => import('../pages/KYCPage'));
 export const RealTimeDemo = lazy(() => import('../pages/RealTimeDemo'));
 export const MockDataDemo = lazy(() => import('../components/MockDataDemo'));
 export const NotFound = lazy(() => import('../pages/NotFound'));
+
+// Enhanced components
+export const UltraModernDashboard = lazy(() => import('../components/enhanced/UltraModernDashboard'));
 
 // Chart components - loaded only when needed
 export const RechartsComponents = lazy(() => import('recharts').then(module => ({

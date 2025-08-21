@@ -24,7 +24,8 @@ import {
   MockDataDemo,
   NotFound,
   LoadingFallback,
-  preloadCriticalComponents
+  preloadCriticalComponents,
+  UltraModernDashboard
 } from "./components/LazyComponents";
 import SimpleApp from "./pages/SimpleApp";
 
@@ -87,13 +88,13 @@ const App = () => {
                     </Suspense>
                   } />
                   <Route path="dashboard" element={
-                    <Suspense fallback={<LoadingFallback message="Loading dashboard..." />}>
-                      <HomePage />
+                    <Suspense fallback={<LoadingFallback message="Loading advanced dashboard..." />}>
+                      <UltraModernDashboard />
                     </Suspense>
                   } />
                   <Route path="home" element={
-                    <Suspense fallback={<LoadingFallback message="Loading dashboard..." />}>
-                      <HomePage />
+                    <Suspense fallback={<LoadingFallback message="Loading advanced dashboard..." />}>
+                      <UltraModernDashboard />
                     </Suspense>
                   } />
                   <Route path="history" element={
@@ -157,6 +158,15 @@ const App = () => {
                     </Suspense>
                   } />
                 </Route>
+                
+                {/* Standalone Ultra-Modern Dashboard */}
+                <Route path="/ultra-modern-dashboard" element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingFallback message="Loading ultra-modern dashboard..." />}>
+                      <UltraModernDashboard />
+                    </Suspense>
+                  </ProtectedRoute>
+                } />
                 
                   <Route path="*" element={<NotFound />} />
                 </Routes>

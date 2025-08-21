@@ -157,44 +157,26 @@ const SmartSipHomePage = () => {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => navigate('/mock-demo')}
-                className="gap-2 hidden xl:flex bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 hover:from-purple-700 hover:to-pink-700"
-              >
-                <Sparkles size={16} />
-                Mock Data Demo
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
                 onClick={() => navigate('/dashboard')}
-                className="gap-2 hidden xl:flex"
+                className="gap-2 hidden xl:flex bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 hover:from-blue-700 hover:to-purple-700"
               >
                 <BarChart3 size={16} />
-                Traditional Dashboard
+                Advanced Dashboard
               </Button>
               <MarketIndicator className="hidden xl:block" />
             </div>
           </div>
           
           {/* Mobile navigation buttons */}
-          <div className="flex justify-center gap-2 mb-4 xl:hidden">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/mock-demo')}
-              className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 hover:from-purple-700 hover:to-pink-700"
-            >
-              <Sparkles size={16} />
-              Mock Demo
-            </Button>
+          <div className="flex justify-center mb-4 xl:hidden">
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => navigate('/dashboard')}
-              className="gap-2"
+              className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 hover:from-blue-700 hover:to-purple-700"
             >
-              <BarChart3 size={16} />
-              Dashboard
+              <BarChart3 size={14} />
+              Advanced Dashboard
             </Button>
           </div>
         </div>
