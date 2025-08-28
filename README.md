@@ -6,7 +6,25 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com/)
-[![Test Coverage](https://img.shields.io/badge/Coverage-85%25-brightgreen)](https://github.com/StavanManiyar/piggy-spare-change)
+[![Test Coverage](https://img.shields.io/badge/Coverage-85%25-brightgreen)](https://github.com/TaddsTechnology/Piggy_upi)
+
+## 🌟 **Live Demo & Contribution**
+
+🚀 **Try the live app**: [https://piggy-upi.vercel.app](https://piggy-upi.vercel.app)
+
+💻 **Want to contribute or explore the code?**  
+GitHub Repository → [https://github.com/TaddsTechnology/Piggy_upi](https://github.com/TaddsTechnology/Piggy_upi)
+
+I'm open to suggestions, improvements, and collaborations! 🤝  
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
+
+### 🎯 **Great Ways to Contribute:**
+- 🐛 **Report bugs** or suggest features
+- 🎨 **Improve UI/UX** designs
+- 🔐 **Enhance security** features
+- ⚡ **Optimize performance**
+- 📚 **Improve documentation**
+- 🧪 **Write more tests**
 
 ## 🚀 **What is UPI Piggy?**
 
@@ -117,8 +135,8 @@ We've enhanced the app with **cutting-edge professional designs** that rival top
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/StavanManiyar/piggy-spare-change.git
-cd piggy-spare-change
+git clone https://github.com/TaddsTechnology/Piggy_upi.git
+cd piggy-upi
 
 # 2. Install dependencies
 npm install
@@ -324,8 +342,8 @@ vercel --prod
 ## 📞 **Support**
 
 - **Documentation**: Check the `/docs` folder
-- **Issues**: [GitHub Issues](https://github.com/StavanManiyar/piggy-spare-change/issues)
-- **Security**: Report security issues privately to stavanmaniyar@gmail.com
+- **Issues**: [GitHub Issues](https://github.com/TaddsTechnology/Piggy_upi/issues)
+- **Security**: Report security issues privately to info@taddstechnology.com
 - **General**: Open a discussion in the repository
 
 ---
