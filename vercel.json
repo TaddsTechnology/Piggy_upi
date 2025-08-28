@@ -71,13 +71,8 @@
     "NODE_ENV": "production"
   },
   "functions": {
-    "**": {
-      "experimental": {
-        "enableStreaming": false,
-        "allowDynamicRoutes": false
-      }
+    "app/api/**": {
+      "maxDuration": 10
     }
-  },
-  "skewProtection": false,
-  "coldStartOptimization": false
+  }
 }
