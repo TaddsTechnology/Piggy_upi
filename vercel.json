@@ -69,5 +69,15 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "functions": {
+    "**": {
+      "experimental": {
+        "enableStreaming": false,
+        "allowDynamicRoutes": false
+      }
+    }
+  },
+  "skewProtection": false,
+  "coldStartOptimization": false
 }
