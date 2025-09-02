@@ -236,6 +236,9 @@ class RazorpayService {
       throw new Error('Transaction not found');
     }
 
+    // Get user details for prefill
+    const userProfile = this.getUserProfileForPayment();
+
     const options = {
       key: this.keyId,
       amount: Math.round(amount * 100), // Convert to paise
@@ -246,36 +249,73 @@ class RazorpayService {
       image: '/piggy.png',
       handler: async (response: any) => {
         try {
-          // Update transaction status
+          console.log('🎉 Payment Success Response:', response);
+          
+          // Update local transaction status immediately
           transaction.paymentId = response.razorpay_payment_id;
           transaction.status = 'paid';
           this.saveTransactions();
 
+          // Update transaction in database
+          await this.updateTransactionInDatabase(
+            transaction.id,
+            'paid',
+            response.razorpay_payment_id,
+            this.detectPaymentMethod(response)
+          );
+
           // Process round-off investment
           if (transaction.roundOffAmount > 0 && this.roundOffSettings.investRoundOff) {
-            await this.investRoundOff(transaction.roundOffAmount);
+            await this.investRoundOff(transaction.roundOffAmount, transaction.id);
           }
 
+          // Add to piggy ledger for round-off
+          if (transaction.roundOffAmount > 0) {
+            await this.addToPiggyLedger(
+              transaction.userId,
+              transaction.roundOffAmount,
+              'roundup_credit',
+              `Round-off from payment ${response.razorpay_payment_id}`,
+              transaction.id,
+              orderId
+            );
+          }
+
+          // Show success toast with more details
           toast({
             title: "Payment Successful! 🎉",
-            description: `₹${transaction.roundedAmount} paid successfully${
-              transaction.roundOffAmount > 0 
-                ? ` (₹${transaction.roundOffAmount} invested as spare change)`
-                : ''
-            }`,
-            duration: 5000,
+            description: `₹${transaction.roundedAmount} paid successfully${transaction.roundOffAmount > 0 
+              ? ` (₹${transaction.roundOffAmount} invested as spare change)` 
+              : ''}
+            \nPayment ID: ${response.razorpay_payment_id.slice(-8)}`,
+            duration: 8000,
           });
 
-          onSuccess?.(response);
+          // Call success callback with enhanced data
+          onSuccess?.({
+            ...response,
+            transaction,
+            roundOffInvested: transaction.roundOffAmount > 0 && this.roundOffSettings.investRoundOff
+          });
         } catch (error) {
-          console.error('Error processing successful payment:', error);
+          console.error('❌ Error processing successful payment:', error);
+          
+          // Even if post-processing fails, mark payment as successful
+          // but notify user about potential issue
+          toast({
+            title: "Payment Received ✅",
+            description: "Payment successful but there was an issue with investment processing. Contact support if needed.",
+            variant: "destructive",
+            duration: 10000,
+          });
+          
           onFailure?.(error);
         }
       },
       prefill: {
-        name: 'Demo User', // TODO: Replace with actual user.name
-        email: 'demo@example.com', // TODO: Replace with actual user.email
-        contact: '+91-9999999999' // TODO: Replace with actual user.phone
+        name: userProfile.name || 'UPI Piggy User',
+        email: userProfile.email || 'user@upipiggy.com',
+        contact: userProfile.phone || '+91-9999999999'
       },
       notes: {
         transaction_id: transaction.id,
@@ -299,17 +339,42 @@ class RazorpayService {
     // @ts-ignore
     const rzp = new window.Razorpay(options);
     
-    rzp.on('payment.failed', (response: any) => {
+    rzp.on('payment.failed', async (response: any) => {
+      console.log('❌ Payment Failed Response:', response);
+      
       transaction.status = 'failed';
       this.saveTransactions();
       
+      // Update transaction in database
+      try {
+        await this.updateTransactionInDatabase(
+          transaction.id,
+          'failed',
+          undefined,
+          undefined,
+          response.error?.description
+        );
+      } catch (dbError) {
+        console.error('Error updating failed transaction in database:', dbError);
+      }
+      
+      // Show detailed error message
+      const errorMessage = response.error?.description || 
+        response.error?.reason || 
+        'Your payment could not be processed. Please try again.';
+      
       toast({
-        title: "Payment Failed",
-        description: "Your payment could not be processed. Please try again.",
+        title: "Payment Failed ❌",
+        description: `${errorMessage}\nError Code: ${response.error?.code || 'UNKNOWN'}`,
         variant: "destructive",
+        duration: 8000,
       });
 
-      onFailure?.(response);
+      onFailure?.({
+        ...response,
+        transaction,
+        errorMessage
+      });
     });
 
     rzp.open();
@@ -350,28 +415,141 @@ class RazorpayService {
     }
   }
 
-  // Invest round-off amount
-  private async investRoundOff(amount: number): Promise<void> {
+  // Helper methods for database integration
+  private getUserProfileForPayment() {
+    // Get user profile from localStorage or context
+    const userProfile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+    return {
+      name: userProfile.full_name || userProfile.name,
+      email: userProfile.email,
+      phone: userProfile.phone
+    };
+  }
+
+  private detectPaymentMethod(response: any): string {
+    // Detect payment method from Razorpay response
+    if (response.razorpay_payment_id) {
+      const paymentId = response.razorpay_payment_id;
+      if (paymentId.startsWith('pay_')) {
+        // This is a simplified detection - in real app, you'd get this from webhook
+        return 'upi'; // Default to UPI for demo
+      }
+    }
+    return 'unknown';
+  }
+
+  private async updateTransactionInDatabase(
+    transactionId: string, 
+    status: 'paid' | 'failed' | 'cancelled',
+    paymentId?: string,
+    paymentMethod?: string,
+    errorMessage?: string
+  ): Promise<void> {
     try {
-      // This would integrate with your investment service
-      console.log(`Investing round-off amount: ₹${amount}`);
+      console.log(`📊 Updating transaction ${transactionId} in database:`, {
+        status,
+        paymentId,
+        paymentMethod,
+        errorMessage
+      });
+
+      await TransactionService.updateTransactionStatus(
+        transactionId,
+        status,
+        paymentId,
+        paymentMethod
+      );
+
+      console.log(`✅ Transaction ${transactionId} updated successfully in database`);
+    } catch (error) {
+      console.error(`❌ Failed to update transaction ${transactionId} in database:`, error);
+      throw error;
+    }
+  }
+
+  private async addToPiggyLedger(
+    userId: string,
+    amount: number,
+    type: 'roundup_credit' | 'manual_topup' | 'investment_debit',
+    reference: string,
+    transactionId?: string,
+    orderId?: string
+  ): Promise<void> {
+    try {
+      console.log(`🐷 Adding to piggy ledger:`, {
+        userId,
+        amount,
+        type,
+        reference
+      });
+
+      // In a real app, you would call your Supabase API here
+      // For now, we'll store it locally and log for demo purposes
+      const ledgerEntry = {
+        id: `ledger_${Date.now()}`,
+        user_id: userId,
+        amount,
+        type,
+        reference,
+        transaction_id: transactionId,
+        order_id: orderId,
+        timestamp: new Date().toISOString(),
+        created_at: new Date().toISOString()
+      };
+
+      // Store locally for demo
+      const existingLedger = JSON.parse(localStorage.getItem('piggy_ledger') || '[]');
+      existingLedger.push(ledgerEntry);
+      localStorage.setItem('piggy_ledger', JSON.stringify(existingLedger));
+
+      console.log(`✅ Added to piggy ledger successfully`);
+    } catch (error) {
+      console.error(`❌ Failed to add to piggy ledger:`, error);
+      // Don't throw error here as it's not critical for payment success
+    }
+  }
+
+  // Invest round-off amount with database integration
+  private async investRoundOff(amount: number, transactionId?: string): Promise<void> {
+    try {
+      console.log(`💰 Investing round-off amount: ₹${amount}`);
       
-      // Mock investment of round-off amount
+      const userId = UserService.getCurrentUserId();
+      
+      // Create round-off investment record in database
+      try {
+        await TransactionService.createRoundOffInvestment({
+          userId,
+          transactionId,
+          amount,
+          portfolioId: 'default_roundoff_portfolio'
+        });
+        
+        console.log(`✅ Round-off investment created in database`);
+      } catch (dbError) {
+        console.warn('Database not available, storing locally:', dbError);
+      }
+      
+      // Also store locally for immediate access
       const roundOffInvestment = {
         id: `roundoff_${Date.now()}`,
         amount: amount,
         type: 'round_off',
         timestamp: new Date(),
-        portfolioId: 'default_roundoff_portfolio' // Could be a specific round-off portfolio
+        portfolioId: 'default_roundoff_portfolio',
+        transactionId,
+        userId
       };
 
-      // Save round-off investment
       const existingRoundOffs = JSON.parse(localStorage.getItem('piggy_roundoff_investments') || '[]');
       existingRoundOffs.push(roundOffInvestment);
       localStorage.setItem('piggy_roundoff_investments', JSON.stringify(existingRoundOffs));
+      
+      console.log(`✅ Round-off investment stored locally as backup`);
 
     } catch (error) {
-      console.error('Error investing round-off amount:', error);
+      console.error('❌ Error investing round-off amount:', error);
+      // Don't throw error as investment processing shouldn't block payment success
     }
   }
 
