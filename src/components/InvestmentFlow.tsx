@@ -21,7 +21,9 @@ import {
   Clock,
   Loader2,
   CreditCard,
-  Smartphone
+  Smartphone,
+  PiggyBank,
+  Sparkles
 } from "lucide-react";
 
 import { 
@@ -32,6 +34,8 @@ import {
   formatPercentage,
   getRiskColor 
 } from "@/lib/mock-investment-api";
+import RazorpayPayment from "@/components/RazorpayPayment";
+import { RazorpayTransaction } from "@/lib/razorpay-service";
 
 interface InvestmentFlowProps {
   availableBalance: number;
@@ -138,10 +142,15 @@ const InvestmentFlow = ({ availableBalance, onInvestmentComplete, onBack }: Inve
   };
 
   const renderStep1 = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Choose Your Investment Plan</h2>
-        <p className="text-gray-600">Select the portfolio that matches your investment goals</p>
+    <div className="space-y-6 animate-fade-in-up">
+      <div className="text-center animate-slide-down">
+        <div className="mb-4">
+          <div className="inline-flex p-3 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full mb-4">
+            <PieChart className="h-10 w-10 text-blue-600 animate-pulse" />
+          </div>
+        </div>
+        <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Choose Your Investment Plan</h2>
+        <p className="text-gray-600 text-lg max-w-xl mx-auto">Select the perfect portfolio that matches your investment goals and risk appetite</p>
       </div>
 
       {/* Market Status */}
@@ -161,33 +170,35 @@ const InvestmentFlow = ({ availableBalance, onInvestmentComplete, onBack }: Inve
       )}
 
       {/* Portfolio Cards */}
-      <div className="space-y-4">
-        {portfolios.map((portfolio) => (
+      <div className="space-y-4 animate-slide-up">
+        {portfolios.map((portfolio, index) => (
           <Card 
             key={portfolio.id}
-            className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:border-blue-300"
+            className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:border-blue-400 hover:scale-[1.02] group relative overflow-hidden animate-slide-in-left"
+            style={{ animationDelay: `${index * 0.1}s` }}
             onClick={() => handlePortfolioSelect(portfolio)}
           >
-            <CardContent className="p-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-50/0 via-blue-50/50 to-blue-50/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <CardContent className="p-6 relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold">{portfolio.name}</h3>
-                    <Badge className={getRiskColor(portfolio.riskLevel)}>
+                    <h3 className="text-lg font-semibold group-hover:text-blue-700 transition-colors duration-200">{portfolio.name}</h3>
+                    <Badge className={`${getRiskColor(portfolio.riskLevel)} group-hover:scale-110 transition-transform duration-200`}>
                       {portfolio.riskLevel.toUpperCase()} RISK
                     </Badge>
                   </div>
                   <p className="text-gray-600 text-sm mb-3">{portfolio.description}</p>
                   
                   {/* Expected Returns */}
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="flex items-center gap-1">
-                      <TrendingUp className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium">
+                  <div className="flex items-center gap-4 mb-3 group-hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
+                      <TrendingUp className="h-4 w-4 text-green-600 animate-pulse" />
+                      <span className="text-sm font-medium text-green-700">
                         {portfolio.expectedReturns.min}-{portfolio.expectedReturns.max}% returns
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                       Historical: {portfolio.expectedReturns.historical}%
                     </div>
                   </div>
@@ -202,20 +213,23 @@ const InvestmentFlow = ({ availableBalance, onInvestmentComplete, onBack }: Inve
                   </div>
                 </div>
                 
-                <div className="text-right">
+                <div className="text-right group-hover:scale-110 transition-transform duration-200">
                   <div className="text-sm text-gray-500 mb-1">Min. Investment</div>
-                  <div className="font-semibold">₹{portfolio.minimumInvestment}</div>
+                  <div className="font-bold text-lg text-blue-600">₹{portfolio.minimumInvestment}</div>
                 </div>
               </div>
 
               {/* Portfolio Composition */}
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="text-xs font-medium text-gray-700 mb-2">Portfolio Mix:</div>
-                <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 border border-gray-200 group-hover:border-blue-300 transition-colors duration-200">
+                <div className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <PieChart className="h-4 w-4 text-blue-600" />
+                  Portfolio Mix:
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   {portfolio.composition.map((asset, index) => (
-                    <div key={index} className="text-xs">
-                      <span className="font-medium">{asset.asset}:</span>
-                      <span className="text-gray-600 ml-1">{asset.percentage}%</span>
+                    <div key={index} className="text-xs bg-white/50 p-2 rounded border hover:bg-white transition-colors duration-200">
+                      <span className="font-semibold text-gray-800">{asset.asset}:</span>
+                      <span className="text-blue-600 ml-1 font-medium">{asset.percentage}%</span>
                     </div>
                   ))}
                 </div>
@@ -339,6 +353,33 @@ const InvestmentFlow = ({ availableBalance, onInvestmentComplete, onBack }: Inve
     </div>
   );
 
+  const handleRazorpaySuccess = async (transaction: RazorpayTransaction) => {
+    if (!selectedPortfolio) return;
+
+    try {
+      // Process the investment after successful payment
+      const result = await MockInvestmentAPI.investMoney(
+        'demo_user',
+        selectedPortfolio.id,
+        transaction.originalAmount
+      );
+
+      if (result.success && result.investment) {
+        onInvestmentComplete(result.investment);
+        setStep(4);
+      } else {
+        setError(result.error || 'Investment processing failed');
+      }
+    } catch (error) {
+      setError('Something went wrong after payment. Please contact support.');
+    }
+  };
+
+  const handleRazorpayFailure = (error: any) => {
+    console.error('Payment failed:', error);
+    setError('Payment failed. Please try again.');
+  };
+
   const renderStep3 = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -346,12 +387,12 @@ const InvestmentFlow = ({ availableBalance, onInvestmentComplete, onBack }: Inve
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
-        <Badge className="bg-yellow-100 text-yellow-800">Review</Badge>
+        <Badge className="bg-yellow-100 text-yellow-800">Payment</Badge>
       </div>
 
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Review Your Investment</h2>
-        <p className="text-gray-600">Please confirm the details before investing</p>
+        <h2 className="text-2xl font-bold mb-2">Complete Your Investment</h2>
+        <p className="text-gray-600">Secure payment with automatic spare change investment</p>
       </div>
 
       {/* Investment Summary */}
@@ -380,10 +421,6 @@ const InvestmentFlow = ({ availableBalance, onInvestmentComplete, onBack }: Inve
               <span>Units:</span>
               <span className="font-medium">{(parseFloat(investmentAmount) / currentNAV).toFixed(4)}</span>
             </div>
-            <div className="flex justify-between border-t pt-2">
-              <span>Total Amount:</span>
-              <span className="font-bold text-lg">₹{parseFloat(investmentAmount).toFixed(2)}</span>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -393,62 +430,47 @@ const InvestmentFlow = ({ availableBalance, onInvestmentComplete, onBack }: Inve
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="h-5 w-5 text-green-600" />
-            <span className="font-medium">Expected Returns</span>
+            <span className="font-medium">Expected Returns (1 year)</span>
           </div>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-lg font-bold text-green-600">
                 ₹{(parseFloat(investmentAmount) * (1 + (selectedPortfolio?.expectedReturns.min || 8) / 100)).toFixed(0)}
               </div>
-              <div className="text-xs text-gray-600">Conservative (1 year)</div>
+              <div className="text-xs text-gray-600">Conservative</div>
             </div>
             <div>
               <div className="text-lg font-bold text-blue-600">
                 ₹{(parseFloat(investmentAmount) * (1 + (selectedPortfolio?.expectedReturns.historical || 10) / 100)).toFixed(0)}
               </div>
-              <div className="text-xs text-gray-600">Expected (1 year)</div>
+              <div className="text-xs text-gray-600">Expected</div>
             </div>
             <div>
               <div className="text-lg font-bold text-purple-600">
                 ₹{(parseFloat(investmentAmount) * (1 + (selectedPortfolio?.expectedReturns.max || 12) / 100)).toFixed(0)}
               </div>
-              <div className="text-xs text-gray-600">Optimistic (1 year)</div>
+              <div className="text-xs text-gray-600">Optimistic</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Payment Method */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <Smartphone className="h-5 w-5 text-blue-600" />
-            <div>
-              <div className="font-medium">UPI Payment</div>
-              <div className="text-sm text-gray-600">Secure & instant payment via UPI</div>
-            </div>
-            <CheckCircle className="h-5 w-5 text-green-600 ml-auto" />
-          </div>
-        </CardContent>
-      </Card>
+      {error && (
+        <div className="text-red-600 text-sm flex items-center gap-2 bg-red-50 p-3 rounded-lg border border-red-200">
+          <AlertTriangle className="h-4 w-4" />
+          {error}
+        </div>
+      )}
 
-      <Button 
-        onClick={handleInvestmentSubmit}
-        className="w-full h-12 text-lg bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+      {/* Razorpay Payment Component */}
+      <RazorpayPayment
+        amount={parseFloat(investmentAmount)}
+        description={`Investment in ${selectedPortfolio?.name}`}
+        portfolioId={selectedPortfolio?.id}
+        onPaymentSuccess={handleRazorpaySuccess}
+        onPaymentFailure={handleRazorpayFailure}
         disabled={isLoading}
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="h-5 w-5 animate-spin mr-2" />
-            Processing Investment...
-          </>
-        ) : (
-          <>
-            <IndianRupee className="h-5 w-5 mr-2" />
-            Invest ₹{parseFloat(investmentAmount).toFixed(2)}
-          </>
-        )}
-      </Button>
+      />
 
       <div className="text-xs text-gray-500 text-center">
         By investing, you agree to our terms and conditions. Your investment is subject to market risks.
@@ -457,16 +479,23 @@ const InvestmentFlow = ({ availableBalance, onInvestmentComplete, onBack }: Inve
   );
 
   const renderStep4 = () => (
-    <div className="space-y-6 text-center">
-      <div className="flex justify-center">
-        <div className="bg-green-100 p-4 rounded-full">
-          <CheckCircle className="h-12 w-12 text-green-600" />
+    <div className="space-y-8 text-center animate-fade-in-up">
+      <div className="flex justify-center animate-bounce">
+        <div className="bg-gradient-to-r from-green-100 to-emerald-100 p-6 rounded-full shadow-lg animate-pulse">
+          <CheckCircle className="h-16 w-16 text-green-600" />
         </div>
       </div>
       
-      <div>
-        <h2 className="text-2xl font-bold text-green-800 mb-2">Investment Successful! 🎉</h2>
-        <p className="text-gray-600">Your money is now working for you</p>
+      <div className="space-y-3 animate-slide-up">
+        <h2 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-3">
+          Investment Successful! 🎉
+        </h2>
+        <p className="text-gray-600 text-lg">Your money is now working for you and growing!</p>
+        <div className="flex items-center justify-center gap-2 text-green-600">
+          <Sparkles className="h-5 w-5" />
+          <span className="font-medium">Welcome to your wealth journey</span>
+          <Sparkles className="h-5 w-5" />
+        </div>
       </div>
 
       <Card className="bg-green-50 border-green-200">
@@ -483,6 +512,13 @@ const InvestmentFlow = ({ availableBalance, onInvestmentComplete, onBack }: Inve
 
       <div className="space-y-3">
         <Button 
+          onClick={() => window.location.href = '/autopay'}
+          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+        >
+          <Zap className="h-5 w-5 mr-2" />
+          Setup AutoPay for Future Investments
+        </Button>
+        <Button 
           onClick={() => {
             setStep(1);
             setSelectedPortfolio(null);
@@ -493,7 +529,7 @@ const InvestmentFlow = ({ availableBalance, onInvestmentComplete, onBack }: Inve
         >
           Invest More
         </Button>
-        <Button onClick={onBack} className="w-full">
+        <Button onClick={onBack} variant="outline" className="w-full">
           Back to Dashboard
         </Button>
       </div>

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session, AuthResponse } from '@supabase/supabase-js';
 import { auth } from '@/lib/supabase';
 
 interface AuthContextType {
@@ -7,9 +7,9 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   demoMode: boolean;
-  signUp: (email: string, password: string) => Promise<any>;
-  signIn: (email: string, password: string) => Promise<any>;
-  signOut: () => Promise<any>;
+  signUp: (email: string, password: string) => Promise<AuthResponse>;
+  signIn: (email: string, password: string) => Promise<AuthResponse>;
+  signOut: () => Promise<{ error: Error | null }>;
   enterDemoMode: () => void;
   exitDemoMode: () => void;
 }

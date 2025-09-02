@@ -32,6 +32,7 @@ import SimpleApp from "./pages/SimpleApp";
 const ModernLandingPage = lazy(() => import('@/components/enhanced/ModernLandingPage'));
 const ModernDashboard = lazy(() => import('@/components/enhanced/ModernDashboard'));
 const ModernInvestmentFlow = lazy(() => import('@/components/enhanced/ModernInvestmentFlow'));
+const AutoPayPage = lazy(() => import('@/pages/AutoPayPage'));
 
 const queryClient = createOptimizedQueryClient();
 
@@ -155,6 +156,11 @@ const App = () => {
                   <Route path="pro/invest" element={
                     <Suspense fallback={<LoadingFallback message="Loading pro investment flow..." />}>
                       <ModernInvestmentFlow />
+                    </Suspense>
+                  } />
+                  <Route path="autopay" element={
+                    <Suspense fallback={<LoadingFallback message="Loading AutoPay..." />}>
+                      <AutoPayPage />
                     </Suspense>
                   } />
                 </Route>

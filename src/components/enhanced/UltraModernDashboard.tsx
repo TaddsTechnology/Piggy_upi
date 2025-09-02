@@ -213,34 +213,52 @@ const UltraModernDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 transition-all duration-700">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50 animate-slide-down">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-12 w-12">
+            <div className="flex items-center space-x-4 animate-fade-in">
+              <Avatar className="h-12 w-12 ring-2 ring-blue-100 hover:ring-blue-200 transition-all duration-300 hover:scale-105">
                 <AvatarImage src={user?.user_metadata?.avatar_url} />
-                <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold">
                   {userName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">
+              <div className="space-y-1">
+                <h1 className="text-xl font-bold text-gray-900 hover:text-blue-700 transition-colors duration-200">
                   {greeting}, {userName}! 👋
                 </h1>
-                <p className="text-gray-600">Your wealth is growing beautifully</p>
+                <p className="text-gray-600 text-sm">
+                  {demoMode ? 'Demo Mode • Explore freely' : 'Your wealth is growing beautifully'}
+                </p>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <div className="flex items-center space-x-3 animate-fade-in-delay">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleRefresh} 
+                disabled={isRefreshing}
+                className="hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 hover:scale-105"
+              >
+                <RefreshCw className={`h-4 w-4 transition-transform duration-200 ${isRefreshing ? 'animate-spin' : 'hover:rotate-180'}`} />
               </Button>
-              <Button variant="ghost" size="sm" className="relative">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="relative hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 hover:scale-105"
+                onClick={() => navigate('/notifications')}
+              >
                 <Bell className="h-4 w-4" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/settings')}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/settings')}
+                className="hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 hover:scale-105 hover:rotate-12"
+              >
                 <Settings className="h-4 w-4" />
               </Button>
             </div>
@@ -248,71 +266,111 @@ const UltraModernDashboard = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="container mx-auto px-4 py-8 space-y-8 animate-fade-in-up">
         {/* Portfolio Overview */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Portfolio Card */}
-          <Card className="lg:col-span-2 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white border-0 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20"></div>
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-16 -translate-x-16"></div>
+          <Card className="lg:col-span-2 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white border-0 shadow-xl relative overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] group animate-slide-up">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20 group-hover:scale-110 transition-transform duration-700"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-16 -translate-x-16 group-hover:scale-110 transition-transform duration-700"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-purple-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             
             <CardContent className="p-8 relative z-10">
               <div className="flex justify-between items-start mb-6">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 className="h-5 w-5 text-blue-200" />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-2 animate-fade-in">
+                    <BarChart3 className="h-5 w-5 text-blue-200 animate-pulse" />
                     <span className="text-blue-200 text-sm font-medium">Total Portfolio Value</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center">
-                      <IndianRupee className="h-8 w-8" />
-                      <span className="text-4xl md:text-5xl font-bold">
-                        {showBalance ? piggyState.portfolioValue.toLocaleString('en-IN') : '••••••'}
+                  <div className="flex items-center gap-4 animate-slide-in-left">
+                    <div className="flex items-center group">
+                      <IndianRupee className="h-8 w-8 transition-transform duration-300 group-hover:scale-110" />
+                      <span className="text-4xl md:text-5xl font-bold transition-all duration-500 hover:text-yellow-200">
+                        {showBalance ? (
+                          <span className="animate-counter">
+                            {piggyState.portfolioValue.toLocaleString('en-IN')}
+                          </span>
+                        ) : (
+                          <span className="animate-pulse">••••••</span>
+                        )}
                       </span>
                     </div>
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={() => setShowBalance(!showBalance)}
-                      className="text-white hover:bg-white/20"
+                      className="text-white hover:bg-white/20 transition-all duration-200 hover:scale-110 hover:rotate-12"
                     >
-                      {showBalance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showBalance ? 
+                        <EyeOff className="h-4 w-4 transition-transform duration-200" /> : 
+                        <Eye className="h-4 w-4 transition-transform duration-200" />
+                      }
                     </Button>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-1 text-green-300">
-                    <ArrowUpRight className="h-4 w-4" />
+                <div className="text-right space-y-2 animate-slide-in-right">
+                  <div className="flex items-center gap-1 text-green-300 animate-bounce-subtle">
+                    <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:scale-125" />
                     <span className="font-semibold">{formatCurrency(piggyState.totalGains)}</span>
                     <span className="text-sm">({formatPercentage(piggyState.gainsPercent)})</span>
                   </div>
                   <p className="text-blue-200 text-sm">Today's change</p>
+                  <div className="mt-2">
+                    <div className="flex items-center gap-1 text-xs text-blue-300">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span>Live updates</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/20">
-                <div>
-                  <p className="text-blue-200 text-xs uppercase tracking-wide">Invested</p>
-                  <p className="text-xl font-semibold">{formatCurrency(piggyState.totalInvested)}</p>
+              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/20 animate-fade-in-up">
+                <div className="group hover:scale-105 transition-transform duration-200 p-2 rounded-lg hover:bg-white/10">
+                  <p className="text-blue-200 text-xs uppercase tracking-wide mb-1">Invested</p>
+                  <p className="text-xl font-semibold group-hover:text-yellow-200 transition-colors duration-200">
+                    {formatCurrency(piggyState.totalInvested)}
+                  </p>
                 </div>
-                <div>
-                  <p className="text-blue-200 text-xs uppercase tracking-wide">Returns</p>
-                  <p className="text-xl font-semibold text-green-300">{formatCurrency(piggyState.totalGains)}</p>
+                <div className="group hover:scale-105 transition-transform duration-200 p-2 rounded-lg hover:bg-white/10">
+                  <p className="text-blue-200 text-xs uppercase tracking-wide mb-1">Returns</p>
+                  <p className="text-xl font-semibold text-green-300 group-hover:text-green-200 transition-colors duration-200">
+                    {formatCurrency(piggyState.totalGains)}
+                  </p>
                 </div>
-                <div>
-                  <p className="text-blue-200 text-xs uppercase tracking-wide">XIRR</p>
-                  <p className="text-xl font-semibold">{formatPercentage(14.2)}</p>
+                <div className="group hover:scale-105 transition-transform duration-200 p-2 rounded-lg hover:bg-white/10">
+                  <p className="text-blue-200 text-xs uppercase tracking-wide mb-1">XIRR</p>
+                  <p className="text-xl font-semibold group-hover:text-purple-200 transition-colors duration-200">
+                    {formatPercentage(14.2)}
+                  </p>
+                  <div className="mt-1 flex items-center gap-1">
+                    <TrendingUp className="h-3 w-3 text-green-300" />
+                    <span className="text-xs text-green-300">Outperforming</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 mt-6 pt-4 border-t border-white/20">
-                <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
-                  <span className="text-sm font-medium">Market: Open</span>
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/20 animate-slide-up">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 hover:bg-white/30 transition-colors duration-200">
+                    <span className="text-sm font-medium flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      Market: Open
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm text-blue-200">
+                    <Clock className="h-3 w-3" />
+                    <span>Updated 2 min ago</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 text-sm">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span>Live updates</span>
-                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-white hover:bg-white/20 transition-all duration-200"
+                  onClick={() => navigate('/markets')}
+                >
+                  View Markets
+                  <ArrowUpRight className="h-3 w-3 ml-1" />
+                </Button>
               </div>
             </CardContent>
           </Card>

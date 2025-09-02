@@ -132,12 +132,16 @@ export const usePiggyCore = (): [PiggyState, PiggyActions] => {
 
   // Update roundups when rule changes
   useEffect(() => {
+    if (transactions.length === 0) return;
+    
     const calculator = new RoundupCalculator(roundupRule);
     const roundups = calculator.processTransactions(transactions);
     
-    // Keep non-roundup entries and add new roundups
-    const nonRoundupEntries = ledger.filter(entry => entry.type !== 'roundup_credit');
-    setLedger([...nonRoundupEntries, ...roundups]);
+    // Only update if there are actually changes to avoid infinite loops
+    setLedger(prev => {
+      const nonRoundupEntries = prev.filter(entry => entry.type !== 'roundup_credit');
+      return [...nonRoundupEntries, ...roundups];
+    });
   }, [roundupRule, transactions]);
 
   // Initialize algorithms

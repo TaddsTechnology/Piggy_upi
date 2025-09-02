@@ -1,12 +1,15 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/hooks/use-settings";
+import UserService from "@/lib/user-service";
 import { 
   Settings, 
   IndianRupee, 
@@ -18,13 +21,20 @@ import {
   LogOut,
   HelpCircle,
   TestTube,
-  Loader2
+  Loader2,
+  Zap,
+  X,
+  Sparkles,
+  TrendingUp,
+  ArrowRight
 } from "lucide-react";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { user, signOut, demoMode, exitDemoMode } = useAuth();
   const { settings, loading, saving, updateSettingLocal, saveAllSettings } = useSettings();
+  const [showAutopayBanner, setShowAutopayBanner] = useState(false);
+  const [checkingAutopay, setCheckingAutopay] = useState(true);
 
   const handleSignOut = async () => {
     try {
@@ -38,6 +48,47 @@ const SettingsPage = () => {
   const handleExitDemoMode = () => {
     exitDemoMode();
     navigate('/auth');
+  };
+
+  // Check if user has autopay setup
+  useEffect(() => {
+    const checkAutopayStatus = async () => {
+      if (!user || demoMode) {
+        setCheckingAutopay(false);
+        return;
+      }
+
+      try {
+        const currentUser = await UserService.getCurrentUser();
+        const autopaySettings = await UserService.getAutopaySettings(UserService.getCurrentUserId());
+        
+        // Show banner if user has completed onboarding but hasn't set up autopay and hasn't explicitly skipped
+        const shouldShowBanner = currentUser?.preferences?.hasCompletedOnboarding && 
+                                !currentUser?.preferences?.hasSkippedAutopaySetup && 
+                                !autopaySettings;
+        
+        setShowAutopayBanner(shouldShowBanner || false);
+      } catch (error) {
+        console.error('Error checking autopay status:', error);
+        setShowAutopayBanner(false);
+      } finally {
+        setCheckingAutopay(false);
+      }
+    };
+
+    checkAutopayStatus();
+  }, [user, demoMode]);
+
+  const handleDismissAutopayBanner = async () => {
+    setShowAutopayBanner(false);
+    try {
+      const userId = UserService.getCurrentUserId();
+      await UserService.updatePreferences(userId, {
+        hasSkippedAutopaySetup: true
+      });
+    } catch (error) {
+      console.error('Error updating autopay skip preference:', error);
+    }
   };
 
   if (loading) {
@@ -68,6 +119,55 @@ const SettingsPage = () => {
         <h1 className="text-2xl xl:text-4xl font-heading font-semibold mb-2">Settings</h1>
         <p className="text-muted-foreground xl:text-lg">Customize your UPI Piggy experience</p>
       </div>
+
+      {/* AutoPay Onboarding Banner */}
+      {showAutopayBanner && !checkingAutopay && (
+        <Alert className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 dark:from-purple-950 dark:to-blue-950 dark:border-purple-800">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5">
+                <Sparkles className="h-5 w-5 text-purple-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-1">
+                  Maximize Your Returns with AutoPay! 🚀
+                </h4>
+                <AlertDescription className="text-purple-800 dark:text-purple-200 mb-4">
+                  Set up automatic investments and earn up to <strong>15% higher returns</strong> with consistent investing. Never miss market opportunities!
+                </AlertDescription>
+                
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button 
+                    onClick={() => navigate('/autopay')}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                    size="sm"
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    Setup AutoPay Now
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                  <Button 
+                    onClick={handleDismissAutopayBanner}
+                    variant="outline"
+                    size="sm"
+                    className="border-purple-300 text-purple-700 hover:bg-purple-100 dark:border-purple-700 dark:text-purple-300"
+                  >
+                    Maybe Later
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDismissAutopayBanner}
+              className="text-purple-600 hover:text-purple-700 hover:bg-purple-100 dark:text-purple-400"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </Alert>
+      )}
 
       <div className="xl:grid xl:grid-cols-2 xl:gap-8">
         <div className="space-y-6">
@@ -330,6 +430,18 @@ const SettingsPage = () => {
               <Button variant="outline" className="w-full justify-start">
                 <User size={16} className="mr-2" />
                 Profile & KYC
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full justify-start bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 hover:from-purple-100 hover:to-blue-100" 
+                onClick={() => navigate('/autopay')}
+              >
+                <Zap size={16} className="mr-2 text-purple-600" />
+                <div className="flex flex-col items-start">
+                  <span>AutoPay & Spare Change</span>
+                  <span className="text-xs text-muted-foreground">Setup automatic investments</span>
+                </div>
               </Button>
               
               <Button variant="outline" className="w-full justify-start">

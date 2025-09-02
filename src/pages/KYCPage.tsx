@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
+import KYCService, { KYCFormData, KYCDocuments, KYCStatus } from '@/lib/kyc-service';
 import { 
   CheckCircle2, 
   Upload, 
@@ -18,40 +22,21 @@ import {
   Phone,
   Mail,
   Shield,
-  Info
+  Info,
+  Loader2,
+  ArrowLeft,
+  ArrowRight,
+  Sparkles,
+  Building,
+  IndianRupee,
+  Zap,
+  Camera,
+  Clock
 } from 'lucide-react';
 
-interface KYCFormData {
-  // Personal Info
-  fullName: string;
-  dateOfBirth: string;
-  gender: string;
-  fatherName: string;
-  motherName: string;
-  
-  // Contact Info
-  email: string;
-  phone: string;
-  
-  // Address
-  address: string;
-  city: string;
-  state: string;
-  pincode: string;
-  
-  // Identity
-  panNumber: string;
-  aadhaarNumber: string;
-  
-  // Bank Details
-  accountNumber: string;
-  ifscCode: string;
-  bankName: string;
-  
-  // Income
-  annualIncome: string;
-  occupation: string;
-  
+// Use types from KYC service
+interface LocalKYCFormData extends KYCFormData {
+  motherName: string; // Make motherName required in local interface
   // Documents
   panCard: File | null;
   aadhaarCard: File | null;
@@ -60,15 +45,17 @@ interface KYCFormData {
 }
 
 const KYCPage = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<KYCFormData>({
-    fullName: '',
+  const [formData, setFormData] = useState<LocalKYCFormData>({
+    fullName: user?.user_metadata?.full_name || '',
     dateOfBirth: '',
     gender: '',
     fatherName: '',
     motherName: '',
-    email: '',
-    phone: '',
+    email: user?.email || '',
+    phone: user?.user_metadata?.phone || '',
     address: '',
     city: '',
     state: '',
@@ -88,15 +75,19 @@ const KYCPage = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [kycSubmitted, setKycSubmitted] = useState(false);
+  const [verificationId, setVerificationId] = useState<string | null>(null);
+  const [kycStatus, setKycStatus] = useState<KYCStatus | null>(null);
+  const [bankVerifying, setBankVerifying] = useState(false);
 
   const totalSteps = 4;
   const progress = (currentStep / totalSteps) * 100;
 
-  const handleInputChange = (field: keyof KYCFormData, value: string) => {
+  const handleInputChange = (field: keyof LocalKYCFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleFileChange = (field: keyof KYCFormData, file: File | null) => {
+  const handleFileChange = (field: keyof LocalKYCFormData, file: File | null) => {
     setFormData(prev => ({ ...prev, [field]: file }));
   };
 
@@ -135,18 +126,72 @@ const KYCPage = () => {
     setError(null);
     
     try {
-      // Simulate KYC submission
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Prepare KYC submission data
+      const kycSubmission = {
+        // Personal Info
+        fullName: formData.fullName,
+        dateOfBirth: formData.dateOfBirth,
+        gender: formData.gender,
+        fatherName: formData.fatherName,
+        motherName: formData.motherName,
+        
+        // Contact Info
+        email: formData.email,
+        phone: formData.phone,
+        
+        // Address
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        
+        // Identity
+        panNumber: formData.panNumber,
+        aadhaarNumber: formData.aadhaarNumber,
+        
+        // Bank Details
+        accountNumber: formData.accountNumber,
+        ifscCode: formData.ifscCode,
+        bankName: formData.bankName,
+        
+        // Income
+        annualIncome: formData.annualIncome,
+        occupation: formData.occupation,
+        
+        // Documents
+        documents: {
+          panCard: formData.panCard,
+          aadhaarCard: formData.aadhaarCard,
+          bankStatement: formData.bankStatement,
+          photo: formData.photo
+        }
+      };
       
-      // In production, this would:
-      // 1. Upload documents to secure storage
-      // 2. Submit data to KYC verification service
-      // 3. Create verification record in database
-      // 4. Send confirmation email
+      // Submit KYC through service
+      const result = await KYCService.submitKYC(kycSubmission);
       
-      console.log('KYC submitted successfully:', formData);
+      setVerificationId(result.verificationId);
+      setKycSubmitted(true);
+      
+      toast({
+        title: "KYC Submitted Successfully! 🎉",
+        description: `Your verification ID is ${result.verificationId}. ${result.razorpayCustomerId ? 'Payment setup complete.' : ''}`,
+        duration: 5000,
+      });
+      
+      console.log('KYC submitted successfully:', {
+        verificationId: result.verificationId,
+        razorpayCustomerId: result.razorpayCustomerId
+      });
+      
     } catch (err) {
-      setError('KYC submission failed. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'KYC submission failed. Please try again.';
+      setError(errorMessage);
+      toast({
+        title: "Submission Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -159,7 +204,7 @@ const KYCPage = () => {
     required = true 
   }: {
     label: string;
-    field: keyof KYCFormData;
+    field: keyof LocalKYCFormData;
     accept?: string;
     required?: boolean;
   }) => (
@@ -186,16 +231,124 @@ const KYCPage = () => {
     </div>
   );
 
-  return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container max-w-4xl mx-auto px-4">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Shield className="text-primary" size={32} />
-            <h1 className="text-3xl font-heading font-bold">Complete Your KYC</h1>
+  // Load KYC status on component mount
+  useEffect(() => {
+    const loadKYCStatus = async () => {
+      try {
+        const status = await KYCService.getKYCStatus();
+        if (status) {
+          setKycStatus(status);
+          if (status.status === 'verified' || status.status === 'in_progress') {
+            setKycSubmitted(true);
+            setVerificationId(status.verificationId);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load KYC status:', error);
+      }
+    };
+    
+    loadKYCStatus();
+  }, []);
+
+  if (kycSubmitted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 py-8 animate-fade-in-up">
+        <div className="container max-w-2xl mx-auto px-4 text-center">
+          <div className="animate-bounce mb-6">
+            <div className="bg-gradient-to-r from-green-100 to-emerald-100 p-6 rounded-full shadow-lg mx-auto w-fit">
+              <CheckCircle2 className="h-16 w-16 text-green-600" />
+            </div>
           </div>
-          <p className="text-muted-foreground mb-4">
-            Know Your Customer verification is required for regulatory compliance
+          
+          <div className="space-y-4 animate-slide-up">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              KYC Submitted Successfully! 🎉
+            </h1>
+            <p className="text-gray-600 text-lg max-w-xl mx-auto">
+              Your documents are under review. We'll notify you once the verification is complete.
+            </p>
+            
+            {verificationId && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                <p className="text-sm text-blue-700 font-medium">Verification ID</p>
+                <p className="text-xl font-bold text-blue-800">{verificationId}</p>
+                <p className="text-xs text-blue-600 mt-1">Save this ID for future reference</p>
+              </div>
+            )}
+          </div>
+          
+          <Card className="mt-8 max-w-md mx-auto">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <Clock className="h-4 w-4 text-yellow-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-sm">Review in Progress</p>
+                    <p className="text-xs text-gray-600">Usually takes 24-48 hours</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Mail className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-sm">Email Updates</p>
+                    <p className="text-xs text-gray-600">We'll keep you informed via email</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <IndianRupee className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-sm">Ready to Invest</p>
+                    <p className="text-xs text-gray-600">You can start investing once approved</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <div className="flex gap-3 mt-8 justify-center">
+            <Button 
+              onClick={() => navigate('/dashboard')}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+            <Button 
+              onClick={() => navigate('/invest')}
+              variant="outline"
+            >
+              <Zap className="h-4 w-4 mr-2" />
+              Explore Investments
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 py-8 animate-fade-in-up">
+      <div className="container max-w-4xl mx-auto px-4">
+        <div className="text-center mb-8 animate-slide-down">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-3 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full">
+              <Shield className="text-blue-600 animate-pulse" size={32} />
+            </div>
+            <h1 className="text-4xl font-heading font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Complete Your KYC
+            </h1>
+          </div>
+          <p className="text-muted-foreground text-lg mb-4 max-w-2xl mx-auto">
+            Know Your Customer verification is required for regulatory compliance and secure investing
           </p>
           
           <div className="flex items-center justify-center gap-4 mb-6">
@@ -212,18 +365,35 @@ const KYCPage = () => {
           </Alert>
         </div>
 
-        <Card>
+        <Card className="hover:shadow-xl transition-all duration-300 animate-slide-up">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {currentStep === 1 && <User className="text-primary" size={24} />}
-              {currentStep === 2 && <MapPin className="text-primary" size={24} />}
-              {currentStep === 3 && <CreditCard className="text-primary" size={24} />}
-              {currentStep === 4 && <FileText className="text-primary" size={24} />}
+            <CardTitle className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg text-white ${
+                currentStep === 1 ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
+                currentStep === 2 ? 'bg-gradient-to-r from-green-500 to-green-600' :
+                currentStep === 3 ? 'bg-gradient-to-r from-purple-500 to-purple-600' :
+                'bg-gradient-to-r from-orange-500 to-orange-600'
+              }`}>
+                {currentStep === 1 && <User size={24} />}
+                {currentStep === 2 && <MapPin size={24} />}
+                {currentStep === 3 && <Building size={24} />}
+                {currentStep === 4 && <Camera size={24} />}
+              </div>
               
-              {currentStep === 1 && 'Personal Information'}
-              {currentStep === 2 && 'Address Details'}
-              {currentStep === 3 && 'Financial Information'}
-              {currentStep === 4 && 'Document Upload'}
+              <div>
+                <span className="text-xl">
+                  {currentStep === 1 && 'Personal Information'}
+                  {currentStep === 2 && 'Address Details'}
+                  {currentStep === 3 && 'Financial Information'}
+                  {currentStep === 4 && 'Document Upload'}
+                </span>
+                <p className="text-sm text-gray-600 font-normal">
+                  {currentStep === 1 && 'Tell us about yourself'}
+                  {currentStep === 2 && 'Where do you live?'}
+                  {currentStep === 3 && 'Your financial details'}
+                  {currentStep === 4 && 'Upload required documents'}
+                </p>
+              </div>
             </CardTitle>
           </CardHeader>
           
@@ -429,6 +599,51 @@ const KYCPage = () => {
                   </div>
                 </div>
                 
+                {/* Bank Account Verification */}
+                {formData.accountNumber && formData.ifscCode && formData.bankName && (
+                  <div className="mt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={async () => {
+                        setBankVerifying(true);
+                        try {
+                          const result = await KYCService.verifyBankAccount(
+                            formData.accountNumber,
+                            formData.ifscCode,
+                            formData.fullName
+                          );
+                          if (result.success) {
+                            toast({
+                              title: "Bank Account Verified! ✅",
+                              description: `Verified for ${result.accountHolderName}`,
+                              duration: 3000,
+                            });
+                          }
+                        } catch (error) {
+                          console.error('Bank verification failed:', error);
+                        } finally {
+                          setBankVerifying(false);
+                        }
+                      }}
+                      disabled={bankVerifying}
+                      className="flex items-center gap-2"
+                    >
+                      {bankVerifying ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Verifying...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-4 w-4" />
+                          Verify Bank Account
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+                
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="annualIncome">Annual Income</Label>
@@ -502,12 +717,14 @@ const KYCPage = () => {
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between pt-6 border-t">
+            <div className="flex justify-between pt-6 border-t animate-fade-in-delay">
               <Button
                 variant="outline"
                 onClick={prevStep}
                 disabled={currentStep === 1}
+                className="flex items-center gap-2 hover:scale-105 transition-transform duration-200"
               >
+                <ArrowLeft className="h-4 w-4" />
                 Previous
               </Button>
               
@@ -515,17 +732,28 @@ const KYCPage = () => {
                 <Button
                   onClick={nextStep}
                   disabled={!validateStep(currentStep)}
-                  className="bg-gradient-growth"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 flex items-center gap-2 hover:scale-105 transition-all duration-200"
                 >
                   Continue
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               ) : (
                 <Button
                   onClick={handleSubmit}
                   disabled={!validateStep(currentStep) || isLoading}
-                  className="bg-gradient-growth"
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 flex items-center gap-2 h-12 px-8 hover:scale-105 transition-all duration-200"
                 >
-                  {isLoading ? 'Submitting KYC...' : 'Submit for Verification'}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Submitting KYC...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      Submit for Verification
+                    </>
+                  )}
                 </Button>
               )}
             </div>
