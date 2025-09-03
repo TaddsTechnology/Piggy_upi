@@ -27,6 +27,7 @@ import {
   preloadCriticalComponents,
   UltraModernDashboard
 } from "./components/LazyComponents";
+import DebugPanel from "./components/DebugPanel";
 import SimpleApp from "./pages/SimpleApp";
 
 const ModernLandingPage = lazy(() => import('@/components/enhanced/ModernLandingPage'));

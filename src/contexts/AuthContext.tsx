@@ -76,6 +76,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const exitDemoMode = () => {
     setDemoMode(false);
+    // Clear any demo-related data from localStorage
+    localStorage.removeItem('demo_user_id');
+    localStorage.removeItem('demo_mode');
+    localStorage.removeItem('mock_data_initialized');
   };
 
   const value = {

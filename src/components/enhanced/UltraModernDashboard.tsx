@@ -190,10 +190,17 @@ const UltraModernDashboard = () => {
     },
   ];
 
+  const { exitDemoMode } = useAuth(); // Add this line
+  
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await piggyActions.refreshPrices();
     setTimeout(() => setIsRefreshing(false), 1500);
+  };
+  
+  const handleExitDemo = () => {
+    exitDemoMode();
+    window.location.reload(); // Refresh to load real data
   };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -235,6 +242,21 @@ const UltraModernDashboard = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3 animate-fade-in-delay">
+              {demoMode && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300">
+                    Demo Mode
+                  </Badge>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleExitDemo}
+                    className="text-orange-700 border-orange-300 hover:bg-orange-100"
+                  >
+                    Exit Demo
+                  </Button>
+                </div>
+              )}
               <Button 
                 variant="ghost" 
                 size="sm" 
