@@ -6,12 +6,14 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Trophy, Flame, Target, Star, Medal, Crown, RefreshCw, Zap, TrendingUp, Gift } from "lucide-react";
 import { useUserRewards, useLeaderboard, useAchievements, useActivitySimulator, useStreakManager } from '../hooks/useRewards';
+import { useAuth } from '../contexts/AuthContext';
 
 
 const GamificationPage = () => {
-  const userId = 'current_user';
-  const { userRewards, updateStreak, addPoints } = useUserRewards(userId);
-  const { leaderboard, isLoading: leaderboardLoading, refresh: refreshLeaderboard } = useLeaderboard(30000);
+  const { user, demoMode } = useAuth();
+  const userId = user?.id || 'demo_user';
+  const { userRewards, updateStreak, addPoints, isLoading: rewardsLoading } = useUserRewards(userId);
+  const { leaderboard, isLoading: leaderboardLoading, refresh: refreshLeaderboard } = useLeaderboard(userId, 30000);
   const { userAchievements, newAchievements, dismissNewAchievements } = useAchievements(userId);
   const { simulateInvestment, simulateRoundup, simulateStreakActivity, isSimulating, lastActivity } = useActivitySimulator(userId);
   const { streakData, streakAnimation, updateStreak: updateStreakData } = useStreakManager(userId);
@@ -37,6 +39,22 @@ const GamificationPage = () => {
     };
     return iconMap[iconString] || Star;
   };
+
+  // Show loading state while data is being fetched
+  if (rewardsLoading && !userRewards) {
+    return (
+      <div className="container-mobile">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-heading font-semibold mb-2">Rewards & Achievements</h1>
+          <p className="text-muted-foreground">Loading your rewards data...</p>
+        </div>
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container-mobile">
       {/* Header */}

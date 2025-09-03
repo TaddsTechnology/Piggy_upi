@@ -10,9 +10,10 @@ export const useUserRewards = (userId: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUserRewards = useCallback(() => {
+  const fetchUserRewards = useCallback(async () => {
     try {
-      const rewards = rewardsService.getUserRewards(userId);
+      setIsLoading(true);
+      const rewards = await rewardsService.getUserRewards(userId);
       setUserRewards(rewards);
       setError(null);
     } catch (err) {
@@ -65,17 +66,17 @@ export const useUserRewards = (userId: string) => {
 };
 
 // Hook for leaderboard data with real-time updates
-export const useLeaderboard = (refreshInterval: number = 30000) => {
+export const useLeaderboard = (currentUserId?: string, refreshInterval: number = 30000) => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [weeklyLeaderboard, setWeeklyLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const intervalRef = useRef<NodeJS.Timeout>();
 
-  const fetchLeaderboard = useCallback(() => {
+  const fetchLeaderboard = useCallback(async () => {
     try {
-      const allTime = rewardsService.getLeaderboard();
-      const weekly = rewardsService.getWeeklyLeaderboard();
+      const allTime = await rewardsService.getLeaderboard(currentUserId);
+      const weekly = await rewardsService.getWeeklyLeaderboard(currentUserId);
       
       setLeaderboard(allTime);
       setWeeklyLeaderboard(weekly);
@@ -84,7 +85,7 @@ export const useLeaderboard = (refreshInterval: number = 30000) => {
     } catch (err) {
       console.error('Failed to fetch leaderboard:', err);
     }
-  }, []);
+  }, [currentUserId]);
 
   useEffect(() => {
     fetchLeaderboard();
@@ -116,10 +117,10 @@ export const useAchievements = (userId: string) => {
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchAchievements = useCallback(() => {
+  const fetchAchievements = useCallback(async () => {
     try {
       const allAchievements = rewardsService.getAchievements();
-      const userRewards = rewardsService.getUserRewards(userId);
+      const userRewards = await rewardsService.getUserRewards(userId);
       
       setAchievements(allAchievements);
       setUserAchievements(userRewards?.achievements || []);
@@ -135,8 +136,8 @@ export const useAchievements = (userId: string) => {
     }
   }, [userId, fetchAchievements]);
 
-  const checkNewAchievements = useCallback(() => {
-    const userRewards = rewardsService.getUserRewards(userId);
+  const checkNewAchievements = useCallback(async () => {
+    const userRewards = await rewardsService.getUserRewards(userId);
     if (userRewards) {
       const earnedAchievements = userRewards.achievements.filter(a => a.earned);
       const previousCount = userAchievements.filter(a => a.earned).length;

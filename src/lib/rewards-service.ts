@@ -1,6 +1,8 @@
 // Dynamic Rewards Service
 // Manages points, achievements, streaks, and leaderboard functionality
 
+import { supabase } from '@/lib/supabase';
+
 export interface Achievement {
   id: string;
   name: string;
@@ -159,8 +161,8 @@ class RewardsService {
     ];
   }
 
-  private loadMockData(): void {
-    // Create mock user data
+  private async loadMockData(): Promise<void> {
+    // Create mock user data for leaderboard
     const mockUsers = [
       {
         userId: 'user_1',
@@ -177,14 +179,6 @@ class RewardsService {
         totalSaved: 23650,
         streak: 38,
         level: 7
-      },
-      {
-        userId: 'current_user',
-        name: 'You',
-        avatar: 'YU',
-        totalSaved: 12485,
-        streak: 22,
-        level: 4
       },
       {
         userId: 'user_3',
@@ -204,7 +198,7 @@ class RewardsService {
       }
     ];
 
-    // Initialize user rewards data
+    // Initialize leaderboard user rewards data
     mockUsers.forEach(user => {
       const points = this.calculatePointsFromSavings(user.totalSaved, user.streak);
       const userReward: UserRewards = {
@@ -298,8 +292,72 @@ class RewardsService {
   }
 
   // Public methods
-  getUserRewards(userId: string): UserRewards | null {
-    return this.userRewards.get(userId) || null;
+  async getUserRewards(userId: string): Promise<UserRewards | null> {
+    // Check if we already have the user's rewards data cached
+    if (this.userRewards.has(userId)) {
+      return this.userRewards.get(userId) || null;
+    }
+    
+    try {
+      // Fetch real user data from database
+      const { data: userData } = await supabase.auth.getUser();
+      
+      if (!userData.user) {
+        return null;
+      }
+      
+      // Get user's transaction data
+      const { data: transactions } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      // Calculate total savings based on transactions
+      let totalSaved = 0;
+      if (transactions) {
+        totalSaved = transactions.reduce((sum, tx) => {
+          if (tx.direction === 'debit') {
+            return sum + tx.amount;
+          }
+          return sum;
+        }, 0);
+      }
+      
+      // Get streak data from user settings or generate reasonable defaults
+      const { data: settings } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      // Use real data if available, otherwise use realistic fallbacks
+      const streak = settings?.streak || Math.floor(totalSaved / 500); // Estimate streak
+      const userInitials = userData.user.email ? userData.user.email.substring(0, 2).toUpperCase() : 'US';
+      
+      // Generate the rewards data
+      const points = this.calculatePointsFromSavings(totalSaved, streak);
+      const userReward: UserRewards = {
+        userId,
+        totalPoints: points,
+        currentStreak: streak,
+        longestStreak: streak + Math.floor(Math.random() * 5),
+        level: Math.floor(points / 1000) + 1,
+        achievements: this.generateUserAchievements(totalSaved, streak),
+        badges: this.generateUserBadges(totalSaved, streak),
+        streakHistory: this.generateStreakHistory(streak),
+        lastActivity: new Date(),
+        weeklyPoints: Math.floor(points * 0.3),
+        monthlyPoints: points
+      };
+      
+      // Store in cache
+      this.userRewards.set(userId, userReward);
+      return userReward;
+    } catch (error) {
+      console.error('Error fetching real user rewards:', error);
+      return null;
+    }
   }
 
   updateUserStreak(userId: string): UserRewards | null {
@@ -378,18 +436,18 @@ class RewardsService {
     return newAchievements;
   }
 
-  getLeaderboard(limit: number = 10): LeaderboardEntry[] {
+  async getLeaderboard(currentUserId?: string, limit: number = 10): Promise<LeaderboardEntry[]> {
     const entries: LeaderboardEntry[] = [];
 
-    // Mock names for demo
+    // Mock names for demo leaderboard users
     const mockNames = [
       { userId: 'user_1', name: 'Priya S.', avatar: 'PS' },
       { userId: 'user_2', name: 'Rahul K.', avatar: 'RK' },
-      { userId: 'current_user', name: 'You', avatar: 'YU' },
       { userId: 'user_3', name: 'Anjali M.', avatar: 'AM' },
       { userId: 'user_4', name: 'Vikram T.', avatar: 'VT' }
     ];
 
+    // Add mock users to leaderboard
     this.userRewards.forEach((reward, userId) => {
       const userInfo = mockNames.find(u => u.userId === userId);
       if (userInfo) {
@@ -405,6 +463,27 @@ class RewardsService {
         });
       }
     });
+
+    // Add current user if they have rewards data
+    if (currentUserId) {
+      const currentUserRewards = await this.getUserRewards(currentUserId);
+      if (currentUserRewards) {
+        // Get user email for initials
+        const { data: userData } = await supabase.auth.getUser();
+        const userInitials = userData.user?.email ? userData.user.email.substring(0, 2).toUpperCase() : 'YU';
+        
+        entries.push({
+          userId: currentUserId,
+          name: 'You',
+          avatar: userInitials,
+          totalPoints: currentUserRewards.totalPoints,
+          currentStreak: currentUserRewards.currentStreak,
+          totalSaved: this.calculateTotalSaved(currentUserRewards.totalPoints, currentUserRewards.currentStreak),
+          level: currentUserRewards.level,
+          badges: currentUserRewards.badges
+        });
+      }
+    }
 
     // Sort by total points and add ranks
     entries.sort((a, b) => b.totalPoints - a.totalPoints);
@@ -460,8 +539,9 @@ class RewardsService {
     };
   }
 
-  getWeeklyLeaderboard(): LeaderboardEntry[] {
-    return this.getLeaderboard().map(entry => ({
+  async getWeeklyLeaderboard(currentUserId?: string): Promise<LeaderboardEntry[]> {
+    const leaderboard = await this.getLeaderboard(currentUserId);
+    return leaderboard.map(entry => ({
       ...entry,
       totalPoints: Math.floor(entry.totalPoints * 0.3) // Show weekly points
     }));
