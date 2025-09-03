@@ -25,7 +25,8 @@ import {
   NotFound,
   LoadingFallback,
   preloadCriticalComponents,
-  UltraModernDashboard
+  UltraModernDashboard,
+  GoalsPage
 } from "./components/LazyComponents";
 import DebugPanel from "./components/DebugPanel";
 import SimpleApp from "./pages/SimpleApp";
@@ -139,6 +140,11 @@ const App = () => {
                       <SettingsPage />
                     </Suspense>
                   } />
+                  <Route path="goals" element={
+                    <Suspense fallback={<LoadingFallback message="Loading goals..." />}>
+                      <GoalsPage />
+                    </Suspense>
+                  } />
                   <Route path="realtime-demo" element={
                     <Suspense fallback={<LoadingFallback message="Loading real-time demo..." />}>
                       <RealTimeDemo />
@@ -171,6 +177,15 @@ const App = () => {
                   <ProtectedRoute>
                     <Suspense fallback={<LoadingFallback message="Loading ultra-modern dashboard..." />}>
                       <UltraModernDashboard />
+                    </Suspense>
+                  </ProtectedRoute>
+                } />
+                
+                {/* Standalone Goals Page */}
+                <Route path="/goals" element={
+                  <ProtectedRoute>
+                    <Suspense fallback={<LoadingFallback message="Loading goals..." />}>
+                      <GoalsPage />
                     </Suspense>
                   </ProtectedRoute>
                 } />

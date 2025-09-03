@@ -786,7 +786,11 @@ const UltraModernDashboard = () => {
                         <Plus className="h-4 w-4 mr-2" />
                         Add Money
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => navigate('/goals')}
+                      >
                         <Settings className="h-4 w-4 mr-2" />
                         Edit Goal
                       </Button>
@@ -938,7 +942,7 @@ const UltraModernDashboard = () => {
                 <Button 
                   variant="outline" 
                   className="border-white/30 text-white hover:bg-white/10"
-                  onClick={() => navigate('/settings')}
+                  onClick={() => navigate('/goals')}
                 >
                   <Target className="h-4 w-4 mr-2" />
                   Manage Goals
