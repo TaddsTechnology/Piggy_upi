@@ -130,6 +130,30 @@ export const usePiggyCore = (): [PiggyState, PiggyActions] => {
 
   }, [demoMode, user, roundupRule]);
 
+  // Listen for demo mode exit events and clear state
+  useEffect(() => {
+    const handleDemoModeExit = () => {
+      // Reset all state to defaults
+      setRoundupRule(DEFAULT_ROUNDUP_RULE);
+      setPortfolioPresetState('balanced');
+      setAutoInvestEnabled(true);
+      setTransactions([]);
+      setLedger([]);
+      setHoldings([]);
+      
+      // If user is authenticated after demo mode exit, load their real data
+      if (user && !demoMode) {
+        // In a real app, you would load user data from backend here
+        console.log('Loading real user data after demo mode exit');
+      }
+    };
+
+    window.addEventListener('demo-mode-exit', handleDemoModeExit);
+    return () => {
+      window.removeEventListener('demo-mode-exit', handleDemoModeExit);
+    };
+  }, [user, demoMode]);
+
   // Update roundups when rule changes
   useEffect(() => {
     if (transactions.length === 0) return;

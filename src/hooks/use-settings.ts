@@ -149,6 +149,26 @@ export const useSettings = () => {
     loadSettings();
   }, [loadSettings]);
 
+  // Listen for demo mode exit events and clear state
+  useEffect(() => {
+    const handleDemoModeExit = () => {
+      setSettings(null);
+      setError(null);
+      setLoading(true);
+      // Reload real settings
+      if (user?.id && !demoMode) {
+        loadSettings();
+      } else {
+        setLoading(false);
+      }
+    };
+
+    window.addEventListener('demo-mode-exit', handleDemoModeExit);
+    return () => {
+      window.removeEventListener('demo-mode-exit', handleDemoModeExit);
+    };
+  }, [user?.id, demoMode, loadSettings]);
+
   return {
     settings,
     loading,

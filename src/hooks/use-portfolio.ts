@@ -203,6 +203,27 @@ export const usePortfolio = () => {
     loadPortfolio();
   }, [loadPortfolio]);
 
+  // Listen for demo mode exit events and clear state
+  useEffect(() => {
+    const handleDemoModeExit = () => {
+      setPortfolio(null);
+      setRebalanceRecommendations([]);
+      setError(null);
+      setLoading(true);
+      // Reload real data
+      if (user?.id && !demoMode) {
+        loadPortfolio();
+      } else {
+        setLoading(false);
+      }
+    };
+
+    window.addEventListener('demo-mode-exit', handleDemoModeExit);
+    return () => {
+      window.removeEventListener('demo-mode-exit', handleDemoModeExit);
+    };
+  }, [user?.id, demoMode, loadPortfolio]);
+
   return {
     portfolio,
     loading,

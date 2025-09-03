@@ -64,7 +64,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     setLoading(true);
     const result = await auth.signOut();
-    setDemoMode(false); // Exit demo mode when signing out
+    
+    // Exit demo mode and clear all demo-related data
+    if (demoMode) {
+      exitDemoMode();
+    }
+    
+    setDemoMode(false);
     setLoading(false);
     return result;
   };
@@ -76,10 +82,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const exitDemoMode = () => {
     setDemoMode(false);
-    // Clear any demo-related data from localStorage
-    localStorage.removeItem('demo_user_id');
-    localStorage.removeItem('demo_mode');
-    localStorage.removeItem('mock_data_initialized');
+    
+    // Clear any demo-related data from localStorage and sessionStorage
+    const demoKeys = [
+      'demo_user_id',
+      'demo_mode',
+      'mock_data_initialized',
+      'piggy_state',
+      'user_preferences'
+    ];
+    
+    demoKeys.forEach(key => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
+    
+    // Clear IndexedDB demo data if exists
+    if (window.indexedDB) {
+      try {
+        indexedDB.deleteDatabase('piggy-upi-demo-cache');
+      } catch (error) {
+        console.warn('Failed to clear demo IndexedDB:', error);
+      }
+    }
+    
+    // Dispatch a custom event to notify components to clear their demo state
+    window.dispatchEvent(new CustomEvent('demo-mode-exit', { detail: { timestamp: Date.now() } }));
   };
 
   const value = {
