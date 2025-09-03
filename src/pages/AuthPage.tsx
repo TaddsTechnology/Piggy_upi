@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Shield, TrendingUp, Smartphone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { PasswordInputWithStrength } from '@/components/PasswordStrengthIndicator';
+import { validatePassword, isCommonPassword } from '@/lib/password-validation';
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -45,6 +47,20 @@ const AuthPage = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email || !formData.password || !formData.fullName) return;
+    
+    // Validate password requirements
+    const passwordValidation = validatePassword(formData.password);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.errors[0]); // Show first error
+      return;
+    }
+    
+    // Check for common passwords
+    if (isCommonPassword(formData.password)) {
+      setError('This password is too common. Please choose a more secure password.');
+      return;
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -248,14 +264,14 @@ const AuthPage = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="signup-password">Password</Label>
-                      <Input
+                      <PasswordInputWithStrength
                         id="signup-password"
                         name="password"
-                        type="password"
-                        placeholder="••••••••"
                         value={formData.password}
                         onChange={handleInputChange}
+                        placeholder="Create a strong password"
                         required
+                        showStrengthIndicator={true}
                       />
                     </div>
                     <div className="space-y-2">

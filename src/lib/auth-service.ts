@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabase';
 import { welcomeEmailTemplate, emailVerificationTemplate, passwordResetTemplate } from '@/lib/email-templates';
 import { emailService } from '@/lib/email-service';
+import { validatePassword, isCommonPassword } from '@/lib/password-validation';
 import type { User, AuthResponse } from '@supabase/supabase-js';
 
 export interface SignUpData {
@@ -24,6 +25,23 @@ export class AuthService {
    */
   static async signUp(data: SignUpData): Promise<AuthServiceResponse> {
     try {
+      // Validate password requirements
+      const passwordValidation = validatePassword(data.password);
+      if (!passwordValidation.isValid) {
+        return {
+          success: false,
+          error: `Password requirements not met: ${passwordValidation.errors[0]}`
+        };
+      }
+
+      // Check for common passwords
+      if (isCommonPassword(data.password)) {
+        return {
+          success: false,
+          error: 'This password is too common. Please choose a more secure password.'
+        };
+      }
+
       // Create user account
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,

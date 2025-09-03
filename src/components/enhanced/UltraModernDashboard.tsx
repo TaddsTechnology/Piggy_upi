@@ -61,6 +61,7 @@ import {
 import { usePiggyCore } from '@/hooks/use-piggy-core';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency, formatPercentage } from '@/lib/algorithms';
+import { useDemoState } from '@/hooks/use-demo-state';
 
 const UltraModernDashboard = () => {
   const navigate = useNavigate();
@@ -69,24 +70,49 @@ const UltraModernDashboard = () => {
   const [showBalance, setShowBalance] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedTimeframe, setSelectedTimeframe] = useState('1M');
+  
+  // Check if user has real data (not demo mode and has some portfolio value or transactions)
+  const hasRealData = !demoMode && (piggyState.portfolioValue > 0 || piggyState.transactions.length > 0);
+
+  // Handle demo mode transitions
+  useDemoState({
+    onDemoModeExit: () => {
+      // This will be called when demo mode is exited
+      console.log('Dashboard: Demo mode exited, state will be cleared');
+    }
+  });
 
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? 'Good morning' : currentHour < 17 ? 'Good afternoon' : 'Good evening';
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Investor';
 
-  // Mock data for advanced analytics
-  const portfolioData = [
+  // Portfolio data - use real data for authenticated users, demo data for demo mode
+  const portfolioData = demoMode ? [
     { month: 'Jan', invested: 2000, value: 2150, roundups: 180 },
     { month: 'Feb', invested: 4200, value: 4580, roundups: 350 },
     { month: 'Mar', invested: 6800, value: 7420, roundups: 540 },
     { month: 'Apr', invested: 9500, value: 10450, roundups: 720 },
     { month: 'May', invested: 12200, value: 13485, roundups: 890 },
+  ] : hasRealData ? [
+    // Real user data - would come from API in production
+    { month: 'Current', invested: piggyState.totalInvested, value: piggyState.portfolioValue, roundups: piggyState.piggyBalance }
+  ] : [
+    // Empty state for new users
+    { month: 'Start', invested: 0, value: 0, roundups: 0 }
   ];
 
-  const assetAllocation = [
+  // Asset allocation - use real holdings for authenticated users
+  const assetAllocation = demoMode ? [
     { name: 'NIFTYBEES', value: 60, amount: 8091, color: '#3B82F6' },
     { name: 'GOLDBEES', value: 30, amount: 4045, color: '#F59E0B' },
     { name: 'LIQUIDBEES', value: 10, amount: 1349, color: '#10B981' },
+  ] : piggyState.holdings.length > 0 ? piggyState.holdings.map((holding, index) => ({
+    name: holding.symbol,
+    value: Math.round((holding.currentValue / piggyState.portfolioValue) * 100),
+    amount: holding.currentValue,
+    color: ['#3B82F6', '#F59E0B', '#10B981', '#8B5CF6', '#EF4444'][index % 5]
+  })) : [
+    { name: 'No Holdings', value: 100, amount: 0, color: '#94A3B8' }
   ];
 
   const riskAnalysis = [
@@ -98,7 +124,8 @@ const UltraModernDashboard = () => {
     { metric: 'Goal Alignment', current: 88, benchmark: 85 },
   ];
 
-  const aiInsights = [
+  // AI Insights - progressive insights based on investment progress
+  const aiInsights = demoMode ? [
     {
       type: 'positive',
       icon: <TrendingUp className="h-5 w-5" />,
@@ -123,9 +150,58 @@ const UltraModernDashboard = () => {
       action: 'Adjust goal',
       color: 'text-orange-600 bg-orange-100'
     },
+  ] : hasRealData && piggyState.portfolioValue > 5000 ? [
+    // Advanced insights for users with substantial portfolios
+    {
+      type: 'positive',
+      icon: <TrendingUp className="h-5 w-5" />,
+      title: 'Portfolio Growing Well',
+      description: `You've invested ${formatCurrency(piggyState.totalInvested)} and earned ${formatCurrency(piggyState.totalGains)} so far!`,
+      action: 'View details',
+      color: 'text-green-600 bg-green-100'
+    },
+    {
+      type: 'suggestion',
+      icon: <Lightbulb className="h-5 w-5" />,
+      title: 'Consider SIP',
+      description: 'Set up a monthly SIP to automate your investments and benefit from rupee-cost averaging.',
+      action: 'Setup SIP',
+      color: 'text-blue-600 bg-blue-100'
+    }
+  ] : hasRealData && piggyState.portfolioValue > 1000 ? [
+    // Basic insights for users who just started investing
+    {
+      type: 'suggestion',
+      icon: <Lightbulb className="h-5 w-5" />,
+      title: 'Great Start!',
+      description: 'Your investment journey has begun! Keep adding regular contributions to build wealth.',
+      action: 'Learn more',
+      color: 'text-blue-600 bg-blue-100'
+    }
+  ] : hasRealData && piggyState.piggyBalance > 50 ? [
+    // For users who have some roundups but haven't invested yet
+    {
+      type: 'suggestion',
+      icon: <PiggyBank className="h-5 w-5" />,
+      title: 'Ready to Invest',
+      description: `You have ${formatCurrency(piggyState.piggyBalance)} from roundups. Start investing now!`,
+      action: 'Invest now',
+      color: 'text-green-600 bg-green-100'
+    }
+  ] : [
+    // For completely new users
+    {
+      type: 'suggestion',
+      icon: <Lightbulb className="h-5 w-5" />,
+      title: 'Start Your Journey',
+      description: 'Begin investing with as little as ₹10. Every rupee counts!',
+      action: 'Start investing',
+      color: 'text-blue-600 bg-blue-100'
+    }
   ];
 
-  const goals = [
+  // Goals - show demo goals in demo mode, empty state for real users without goals
+  const goals = demoMode ? [
     {
       name: 'Emergency Fund',
       target: 100000,
@@ -153,9 +229,21 @@ const UltraModernDashboard = () => {
       color: 'from-purple-500 to-indigo-500',
       icon: <Target className="h-5 w-5" />
     },
+  ] : [
+    // Default goal for new users - can be replaced with real goals from database
+    {
+      name: 'Emergency Fund',
+      target: 100000,
+      current: Math.min(piggyState.portfolioValue, 100000),
+      progress: Math.min((piggyState.portfolioValue / 100000) * 100, 100),
+      timeLeft: 'Set target date',
+      color: 'from-blue-500 to-cyan-500',
+      icon: <Shield className="h-5 w-5" />
+    }
   ];
 
-  const recentActivity = [
+  // Recent activity - use real transactions for authenticated users
+  const recentActivity = demoMode ? [
     {
       type: 'roundup',
       amount: 7,
@@ -188,7 +276,14 @@ const UltraModernDashboard = () => {
       icon: <Zap className="h-4 w-4" />,
       color: 'text-blue-600 bg-blue-100'
     },
-  ];
+  ] : piggyState.transactions.slice(0, 5).map((transaction, index) => ({
+    type: 'transaction',
+    amount: transaction.amount,
+    description: `Transaction at ${transaction.merchant}`,
+    time: new Date(transaction.timestamp).toLocaleDateString(),
+    icon: <Zap className="h-4 w-4" />,
+    color: 'text-blue-600 bg-blue-100'
+  }));
 
   const { exitDemoMode } = useAuth(); // Add this line
   
@@ -362,11 +457,20 @@ const UltraModernDashboard = () => {
                 <div className="group hover:scale-105 transition-transform duration-200 p-2 rounded-lg hover:bg-white/10">
                   <p className="text-blue-200 text-xs uppercase tracking-wide mb-1">XIRR</p>
                   <p className="text-xl font-semibold group-hover:text-purple-200 transition-colors duration-200">
-                    {formatPercentage(14.2)}
+                    {demoMode ? formatPercentage(14.2) : hasRealData ? formatPercentage(piggyState.gainsPercent) : formatPercentage(0)}
                   </p>
                   <div className="mt-1 flex items-center gap-1">
-                    <TrendingUp className="h-3 w-3 text-green-300" />
-                    <span className="text-xs text-green-300">Outperforming</span>
+                    {(demoMode || (hasRealData && piggyState.gainsPercent > 0)) ? (
+                      <>
+                        <TrendingUp className="h-3 w-3 text-green-300" />
+                        <span className="text-xs text-green-300">{demoMode ? 'Outperforming' : 'Positive'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <TrendingDown className="h-3 w-3 text-gray-300" />
+                        <span className="text-xs text-gray-300">Just started</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -469,7 +573,22 @@ const UltraModernDashboard = () => {
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-900 mb-1">{insight.title}</h4>
                       <p className="text-gray-600 text-sm mb-3">{insight.description}</p>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          if (insight.action.includes('invest') || insight.action.includes('Invest')) {
+                            navigate('/invest');
+                          } else if (insight.action.includes('SIP') || insight.action.includes('Setup')) {
+                            navigate('/autopay');
+                          } else if (insight.action.includes('Learn') || insight.action.includes('details')) {
+                            navigate('/insights');
+                          } else {
+                            // Default action
+                            navigate('/portfolio');
+                          }
+                        }}
+                      >
                         {insight.action}
                       </Button>
                     </div>
@@ -595,12 +714,17 @@ const UltraModernDashboard = () => {
 
             {/* Performance Metrics */}
             <div className="grid md:grid-cols-4 gap-4">
-              {[
+              {(demoMode ? [
                 { label: '7 Days', value: 850, percent: 3.2, positive: true },
                 { label: '30 Days', value: 2100, percent: 8.7, positive: true },
                 { label: '90 Days', value: 4200, percent: 18.5, positive: true },
+                { label: 'All Time', value: 1285, percent: 14.2, positive: true }
+              ] : [
+                { label: '7 Days', value: 0, percent: 0, positive: false },
+                { label: '30 Days', value: 0, percent: 0, positive: false },
+                { label: '90 Days', value: 0, percent: 0, positive: false },
                 { label: 'All Time', value: piggyState.totalGains, percent: piggyState.gainsPercent, positive: piggyState.totalGains >= 0 }
-              ].map((period, index) => (
+              ]).map((period, index) => (
                 <Card key={index} className="hover:shadow-lg transition-all duration-300">
                   <CardContent className="p-4">
                     <p className="text-sm text-gray-600 mb-1">{period.label}</p>
@@ -717,22 +841,30 @@ const UltraModernDashboard = () => {
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600">₹165</div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {demoMode ? '₹165' : hasRealData ? `₹${Math.round(piggyState.piggyBalance * 4)}` : '₹0'}
+                      </div>
                       <div className="text-sm text-gray-600">Avg. Monthly</div>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">₹6.50</div>
+                      <div className="text-2xl font-bold text-green-600">
+                        {demoMode ? '₹6.50' : hasRealData && piggyState.transactions.length > 0 ? 
+                          `₹${(piggyState.piggyBalance / piggyState.transactions.length).toFixed(1)}` : '₹0'}
+                      </div>
                       <div className="text-sm text-gray-600">Avg. Round-up</div>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    {[
+                    {(demoMode ? [
                       { category: 'Food & Dining', amount: 245, transactions: 42 },
                       { category: 'Transportation', amount: 156, transactions: 28 },
                       { category: 'Shopping', amount: 189, transactions: 15 },
                       { category: 'Utilities', amount: 98, transactions: 12 }
-                    ].map((item, index) => (
+                    ] : hasRealData ? [
+                      { category: 'Transactions', amount: piggyState.piggyBalance, transactions: piggyState.transactions.length },
+                      { category: 'Average', amount: piggyState.transactions.length > 0 ? Math.round(piggyState.piggyBalance / piggyState.transactions.length) : 0, transactions: 1 }
+                    ] : []).map((item, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
                           <div className="font-medium">{item.category}</div>
@@ -806,10 +938,10 @@ const UltraModernDashboard = () => {
                 <Button 
                   variant="outline" 
                   className="border-white/30 text-white hover:bg-white/10"
-                  onClick={() => navigate('/goals')}
+                  onClick={() => navigate('/settings')}
                 >
                   <Target className="h-4 w-4 mr-2" />
-                  Set New Goal
+                  Manage Goals
                 </Button>
               </div>
             </div>
