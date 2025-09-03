@@ -21,6 +21,7 @@ import { MarketStatus, MarketIndicator } from "@/components/MarketStatus";
 import SmartSipOnboarding from "@/components/smartsip/SmartSipOnboarding";
 import SmartSipDashboard from "@/components/smartsip/SmartSipDashboard";
 import { SmartSipEngine, SipRecommendation } from "@/lib/smart-sip";
+import { useGamification } from "@/hooks/useGamification";
 
 const SmartSipHomePage = () => {
   const currentHour = new Date().getHours();
@@ -29,6 +30,7 @@ const SmartSipHomePage = () => {
   const navigate = useNavigate();
   const { user, demoMode } = useAuth();
   const [piggyState, piggyActions] = usePiggyCore();
+  const { gamificationData, userStats, isLoading: gamificationLoading } = useGamification();
   
   // Smart SIP state
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -56,15 +58,25 @@ const SmartSipHomePage = () => {
     return transactions;
   }, []);
 
-  // Mock user stats for dashboard
-  const mockUserStats = {
-    totalInvested: piggyState.totalInvested || 5000,
-    monthsActive: 3,
-    consecutiveWeeks: 8,
-    maxWeeklyInvestment: 500,
-    currentPortfolioValue: piggyState.portfolioValue || 5400,
-    totalReturns: piggyState.totalGains || 400,
-    weeklyAmount: userSipRecommendation?.weeklyAmount || 200,
+  // Use real user stats from gamification service, fallback to demo data if needed
+  const realUserStats = userStats ? {
+    totalInvested: userStats.totalInvested,
+    monthsActive: userStats.monthsActive,
+    consecutiveWeeks: userStats.consecutiveWeeks,
+    maxWeeklyInvestment: userStats.maxWeeklyInvestment,
+    currentPortfolioValue: userStats.currentPortfolioValue,
+    totalReturns: userStats.totalReturns,
+    weeklyAmount: userSipRecommendation?.weeklyAmount || userStats.weeklyAmount,
+    age: userStats.age || 25
+  } : {
+    // Fallback to piggy state or demo data
+    totalInvested: piggyState.totalInvested || 0,
+    monthsActive: 0,
+    consecutiveWeeks: 0,
+    maxWeeklyInvestment: 0,
+    currentPortfolioValue: piggyState.portfolioValue || 0,
+    totalReturns: piggyState.totalGains || 0,
+    weeklyAmount: userSipRecommendation?.weeklyAmount || 0,
     age: 25
   };
 
@@ -130,7 +142,7 @@ const SmartSipHomePage = () => {
         </div>
 
         <SmartSipDashboard
-          userStats={mockUserStats}
+          userStats={realUserStats}
           allUsers={mockAllUsers}
         />
       </div>

@@ -17,6 +17,7 @@ import {
   Gift
 } from 'lucide-react';
 import { SipGamification, SipSocial, sipUtils } from '@/lib/smart-sip';
+import { useGamification } from '@/hooks/useGamification';
 
 interface UserStats {
   totalInvested: number;
@@ -40,12 +41,21 @@ export const SmartSipDashboard: React.FC<SmartSipDashboardProps> = ({
   allUsers = [],
   className = ""
 }) => {
-  const userLevel = SipGamification.calculateUserLevel(
+  const { gamificationData } = useGamification();
+  
+  // Use real gamification data if available, otherwise fallback to calculated data
+  const userLevel = gamificationData ? {
+    level: gamificationData.currentLevel,
+    title: gamificationData.levelTitle,
+    nextLevelTarget: 15000, // This should come from level calculation
+    progress: Math.min(100, (gamificationData.totalInvested / 15000) * 100)
+  } : SipGamification.calculateUserLevel(
     userStats.totalInvested, 
     userStats.monthsActive
   );
   
-  const achievements = SipGamification.generateAchievements(userStats);
+  // Use real achievements from gamification data
+  const achievements = gamificationData?.achievements || SipGamification.generateAchievements(userStats);
   const unlockedAchievements = achievements.filter(a => a.achieved);
   const nextAchievement = achievements.find(a => !a.achieved);
   
