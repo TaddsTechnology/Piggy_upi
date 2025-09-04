@@ -432,4 +432,45 @@
       transform: translateZ(0); /* Fixes iOS keyboard issues */
     }
   }
+  
+  /* Scrollbar utilities */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Line clamping utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Mobile-specific overflow fixes */
+  @media (max-width: 768px) {
+    /* Force text wrapping and prevent overflow */
+    .mobile-text-wrap {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: auto;
+    }
+    
+    /* Ensure charts don't overflow */
+    .recharts-wrapper {
+      max-width: 100%;
+      overflow: hidden;
+    }
+  }
 }

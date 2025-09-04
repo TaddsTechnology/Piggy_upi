@@ -315,10 +315,10 @@ const UltraModernDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 transition-all duration-700">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 transition-all duration-700 w-full overflow-x-hidden">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50 animate-slide-down">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50 animate-slide-down w-full">
+        <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
             <div className="flex items-center space-x-3 sm:space-x-4 animate-fade-in w-full sm:w-auto">
               <Avatar className="h-12 w-12 ring-2 ring-blue-100 hover:ring-blue-200 transition-all duration-300 hover:scale-105">
@@ -383,7 +383,7 @@ const UltraModernDashboard = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8 animate-fade-in-up">
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8 animate-fade-in-up overflow-x-hidden">
         {/* Portfolio Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Portfolio Card */}
@@ -399,10 +399,10 @@ const UltraModernDashboard = () => {
                     <BarChart3 className="h-5 w-5 text-blue-200 animate-pulse" />
                     <span className="text-blue-200 text-sm font-medium">Total Portfolio Value</span>
                   </div>
-                  <div className="flex items-center gap-2 sm:gap-4 animate-slide-in-left">
-                    <div className="flex items-center group">
-                      <IndianRupee className="h-8 w-8 transition-transform duration-300 group-hover:scale-110" />
-                      <span className="text-2xl sm:text-4xl md:text-5xl font-bold transition-all duration-500 hover:text-yellow-200">
+                    <div className="flex items-center gap-2 sm:gap-4 animate-slide-in-left overflow-hidden">
+                    <div className="flex items-center group min-w-0">
+                      <IndianRupee className="h-6 w-6 sm:h-8 sm:w-8 transition-transform duration-300 group-hover:scale-110 flex-shrink-0" />
+                      <span className="text-xl sm:text-3xl md:text-4xl font-bold transition-all duration-500 hover:text-yellow-200 truncate">
                         {showBalance ? (
                           <span className="animate-counter">
                             {piggyState.portfolioValue.toLocaleString('en-IN')}
@@ -442,21 +442,21 @@ const UltraModernDashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 pt-4 sm:pt-6 border-t border-white/20 animate-fade-in-up">
-                <div className="group hover:scale-105 transition-transform duration-200 p-2 rounded-lg hover:bg-white/10">
+                <div className="group hover:scale-105 transition-transform duration-200 p-2 rounded-lg hover:bg-white/10 min-w-0">
                   <p className="text-blue-200 text-xs uppercase tracking-wide mb-1">Invested</p>
-                  <p className="text-xl font-semibold group-hover:text-yellow-200 transition-colors duration-200">
+                  <p className="text-lg sm:text-xl font-semibold group-hover:text-yellow-200 transition-colors duration-200 truncate">
                     {formatCurrency(piggyState.totalInvested)}
                   </p>
                 </div>
-                <div className="group hover:scale-105 transition-transform duration-200 p-2 rounded-lg hover:bg-white/10">
+                <div className="group hover:scale-105 transition-transform duration-200 p-2 rounded-lg hover:bg-white/10 min-w-0">
                   <p className="text-blue-200 text-xs uppercase tracking-wide mb-1">Returns</p>
-                  <p className="text-xl font-semibold text-green-300 group-hover:text-green-200 transition-colors duration-200">
+                  <p className="text-lg sm:text-xl font-semibold text-green-300 group-hover:text-green-200 transition-colors duration-200 truncate">
                     {formatCurrency(piggyState.totalGains)}
                   </p>
                 </div>
-                <div className="group hover:scale-105 transition-transform duration-200 p-2 rounded-lg hover:bg-white/10">
+                <div className="group hover:scale-105 transition-transform duration-200 p-2 rounded-lg hover:bg-white/10 min-w-0">
                   <p className="text-blue-200 text-xs uppercase tracking-wide mb-1">XIRR</p>
-                  <p className="text-xl font-semibold group-hover:text-purple-200 transition-colors duration-200">
+                  <p className="text-lg sm:text-xl font-semibold group-hover:text-purple-200 transition-colors duration-200 truncate">
                     {demoMode ? formatPercentage(14.2) : hasRealData ? formatPercentage(piggyState.gainsPercent) : formatPercentage(0)}
                   </p>
                   <div className="mt-1 flex items-center gap-1">
@@ -563,16 +563,16 @@ const UltraModernDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 overflow-x-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {aiInsights.map((insight, index) => (
-                <div key={index} className="bg-white rounded-lg p-4 border border-gray-100">
+                <div key={index} className="bg-white rounded-lg p-4 border border-gray-100 min-w-0">
                   <div className="flex items-start gap-3">
                     <div className={`p-2 rounded-lg ${insight.color}`}>
                       {insight.icon}
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 mb-1">{insight.title}</h4>
-                      <p className="text-gray-600 text-sm mb-3">{insight.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-900 mb-1 truncate">{insight.title}</h4>
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">{insight.description}</p>
                       <Button 
                         size="sm" 
                         variant="outline"
@@ -601,11 +601,11 @@ const UltraModernDashboard = () => {
 
         {/* Analytics Tabs */}
         <Tabs defaultValue="performance" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-24 sm:h-12 rounded-xl overflow-hidden">
-            <TabsTrigger value="performance" className="rounded-lg">Performance</TabsTrigger>
-            <TabsTrigger value="goals" className="rounded-lg">Goals</TabsTrigger>
-            <TabsTrigger value="analytics" className="rounded-lg">Analytics</TabsTrigger>
-            <TabsTrigger value="activity" className="rounded-lg">Activity</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-20 sm:h-12 rounded-xl">
+            <TabsTrigger value="performance" className="rounded-lg text-xs sm:text-sm">Performance</TabsTrigger>
+            <TabsTrigger value="goals" className="rounded-lg text-xs sm:text-sm">Goals</TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-lg text-xs sm:text-sm">Analytics</TabsTrigger>
+            <TabsTrigger value="activity" className="rounded-lg text-xs sm:text-sm">Activity</TabsTrigger>
           </TabsList>
 
           {/* Performance Tab */}
@@ -615,8 +615,8 @@ const UltraModernDashboard = () => {
               <Card>
                 <CardHeader>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
-                    <CardTitle>Portfolio Growth</CardTitle>
-                    <div className="flex items-center space-x-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto">
+                    <CardTitle className="truncate">Portfolio Growth</CardTitle>
+                    <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto scrollbar-hide">
                       {['1W', '1M', '3M', '1Y'].map((period) => (
                         <Button
                           key={period}
@@ -631,7 +631,7 @@ const UltraModernDashboard = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-80">
+                  <div className="h-64 sm:h-80 w-full overflow-hidden">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={portfolioData}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -671,7 +671,7 @@ const UltraModernDashboard = () => {
                   <CardTitle>Asset Allocation</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-80">
+                  <div className="h-64 sm:h-80 w-full overflow-hidden">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -693,13 +693,13 @@ const UltraModernDashboard = () => {
                   </div>
                   <div className="space-y-3 mt-6">
                       {assetAllocation.map((asset, index) => (
-                      <div key={index} className="flex items-center justify-between py-1">
-                        <div className="flex items-center gap-2 sm:gap-3">
+                      <div key={index} className="flex items-center justify-between py-1 min-w-0">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                           <div 
-                            className="w-3 h-3 sm:w-4 sm:h-4 rounded-full" 
+                            className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex-shrink-0" 
                             style={{ backgroundColor: asset.color }}
                           />
-                          <span className="font-medium text-sm sm:text-base">{asset.name}</span>
+                          <span className="font-medium text-sm sm:text-base truncate">{asset.name}</span>
                         </div>
                         <div className="text-right">
                           <div className="font-semibold text-sm sm:text-base">{formatCurrency(asset.amount)}</div>
@@ -725,20 +725,20 @@ const UltraModernDashboard = () => {
                 { label: '90 Days', value: 0, percent: 0, positive: false },
                 { label: 'All Time', value: piggyState.totalGains, percent: piggyState.gainsPercent, positive: piggyState.totalGains >= 0 }
               ]).map((period, index) => (
-                <Card key={index} className="hover:shadow-lg transition-all duration-300">
-                  <CardContent className="p-4">
-                    <p className="text-sm text-gray-600 mb-1">{period.label}</p>
-                    <div className={`flex items-center gap-2 ${period.positive ? 'text-green-600' : 'text-red-600'}`}>
+                <Card key={index} className="hover:shadow-lg transition-all duration-300 min-w-0">
+                  <CardContent className="p-3 sm:p-4">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">{period.label}</p>
+                    <div className={`flex items-center gap-1 sm:gap-2 ${period.positive ? 'text-green-600' : 'text-red-600'} min-w-0`}>
                       {period.positive ? (
-                        <TrendingUp className="h-4 w-4" />
+                        <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                       ) : (
-                        <TrendingDown className="h-4 w-4" />
+                        <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                       )}
-                      <span className="font-semibold">
+                      <span className="font-semibold text-sm sm:text-base truncate">
                         {formatCurrency(Math.abs(period.value))}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 truncate">
                       {formatPercentage(period.percent)}
                     </p>
                   </CardContent>
@@ -810,7 +810,7 @@ const UltraModernDashboard = () => {
                   <CardTitle>Risk Analysis</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-80">
+                  <div className="h-64 sm:h-80 w-full overflow-hidden">
                     <ResponsiveContainer width="100%" height="100%">
                       <RadarChart data={riskAnalysis}>
                         <PolarGrid />
