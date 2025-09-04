@@ -319,8 +319,8 @@ const UltraModernDashboard = () => {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50 animate-slide-down">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4 animate-fade-in">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+            <div className="flex items-center space-x-3 sm:space-x-4 animate-fade-in w-full sm:w-auto">
               <Avatar className="h-12 w-12 ring-2 ring-blue-100 hover:ring-blue-200 transition-all duration-300 hover:scale-105">
                 <AvatarImage src={user?.user_metadata?.avatar_url} />
                 <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold">
@@ -336,7 +336,7 @@ const UltraModernDashboard = () => {
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-3 animate-fade-in-delay">
+            <div className="flex items-center space-x-3 animate-fade-in-delay w-full sm:w-auto justify-end mt-2 sm:mt-0">
               {demoMode && (
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300">
@@ -383,9 +383,9 @@ const UltraModernDashboard = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 space-y-8 animate-fade-in-up">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8 animate-fade-in-up">
         {/* Portfolio Overview */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Portfolio Card */}
           <Card className="lg:col-span-2 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white border-0 shadow-xl relative overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] group animate-slide-up">
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20 group-hover:scale-110 transition-transform duration-700"></div>
@@ -399,10 +399,10 @@ const UltraModernDashboard = () => {
                     <BarChart3 className="h-5 w-5 text-blue-200 animate-pulse" />
                     <span className="text-blue-200 text-sm font-medium">Total Portfolio Value</span>
                   </div>
-                  <div className="flex items-center gap-4 animate-slide-in-left">
+                  <div className="flex items-center gap-2 sm:gap-4 animate-slide-in-left">
                     <div className="flex items-center group">
                       <IndianRupee className="h-8 w-8 transition-transform duration-300 group-hover:scale-110" />
-                      <span className="text-4xl md:text-5xl font-bold transition-all duration-500 hover:text-yellow-200">
+                      <span className="text-2xl sm:text-4xl md:text-5xl font-bold transition-all duration-500 hover:text-yellow-200">
                         {showBalance ? (
                           <span className="animate-counter">
                             {piggyState.portfolioValue.toLocaleString('en-IN')}
@@ -441,7 +441,7 @@ const UltraModernDashboard = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/20 animate-fade-in-up">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 pt-4 sm:pt-6 border-t border-white/20 animate-fade-in-up">
                 <div className="group hover:scale-105 transition-transform duration-200 p-2 rounded-lg hover:bg-white/10">
                   <p className="text-blue-200 text-xs uppercase tracking-wide mb-1">Invested</p>
                   <p className="text-xl font-semibold group-hover:text-yellow-200 transition-colors duration-200">
@@ -475,8 +475,8 @@ const UltraModernDashboard = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/20 animate-slide-up">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/20 animate-slide-up">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-0">
                   <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 hover:bg-white/30 transition-colors duration-200">
                     <span className="text-sm font-medium flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
@@ -552,7 +552,7 @@ const UltraModernDashboard = () => {
         </div>
 
         {/* AI Insights */}
-        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200 overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-2 rounded-lg text-white">
@@ -563,7 +563,7 @@ const UltraModernDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 overflow-x-auto">
               {aiInsights.map((insight, index) => (
                 <div key={index} className="bg-white rounded-lg p-4 border border-gray-100">
                   <div className="flex items-start gap-3">
@@ -601,7 +601,7 @@ const UltraModernDashboard = () => {
 
         {/* Analytics Tabs */}
         <Tabs defaultValue="performance" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 h-12 rounded-xl">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-24 sm:h-12 rounded-xl overflow-hidden">
             <TabsTrigger value="performance" className="rounded-lg">Performance</TabsTrigger>
             <TabsTrigger value="goals" className="rounded-lg">Goals</TabsTrigger>
             <TabsTrigger value="analytics" className="rounded-lg">Analytics</TabsTrigger>
@@ -610,13 +610,13 @@ const UltraModernDashboard = () => {
 
           {/* Performance Tab */}
           <TabsContent value="performance" className="space-y-6">
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Portfolio Growth Chart */}
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
                     <CardTitle>Portfolio Growth</CardTitle>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto">
                       {['1W', '1M', '3M', '1Y'].map((period) => (
                         <Button
                           key={period}
@@ -692,18 +692,18 @@ const UltraModernDashboard = () => {
                     </ResponsiveContainer>
                   </div>
                   <div className="space-y-3 mt-6">
-                    {assetAllocation.map((asset, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                      {assetAllocation.map((asset, index) => (
+                      <div key={index} className="flex items-center justify-between py-1">
+                        <div className="flex items-center gap-2 sm:gap-3">
                           <div 
-                            className="w-4 h-4 rounded-full" 
+                            className="w-3 h-3 sm:w-4 sm:h-4 rounded-full" 
                             style={{ backgroundColor: asset.color }}
                           />
-                          <span className="font-medium">{asset.name}</span>
+                          <span className="font-medium text-sm sm:text-base">{asset.name}</span>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold">{formatCurrency(asset.amount)}</div>
-                          <div className="text-sm text-gray-500">{asset.value}%</div>
+                          <div className="font-semibold text-sm sm:text-base">{formatCurrency(asset.amount)}</div>
+                          <div className="text-xs sm:text-sm text-gray-500">{asset.value}%</div>
                         </div>
                       </div>
                     ))}
@@ -713,7 +713,7 @@ const UltraModernDashboard = () => {
             </div>
 
             {/* Performance Metrics */}
-            <div className="grid md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               {(demoMode ? [
                 { label: '7 Days', value: 850, percent: 3.2, positive: true },
                 { label: '30 Days', value: 2100, percent: 8.7, positive: true },
@@ -753,7 +753,7 @@ const UltraModernDashboard = () => {
               {goals.map((goal, index) => (
                 <Card key={index} className="hover:shadow-lg transition-all duration-300">
                   <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
                       <div className="flex items-center gap-4">
                         <div className={`bg-gradient-to-r ${goal.color} p-3 rounded-xl text-white`}>
                           {goal.icon}
@@ -781,7 +781,7 @@ const UltraModernDashboard = () => {
                       </div>
                     </div>
 
-                    <div className="flex gap-3 mt-6">
+                    <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-6">
                       <Button size="sm" className="flex-1">
                         <Plus className="h-4 w-4 mr-2" />
                         Add Money
@@ -803,7 +803,7 @@ const UltraModernDashboard = () => {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Risk Analysis */}
               <Card>
                 <CardHeader>
@@ -926,12 +926,12 @@ const UltraModernDashboard = () => {
         {/* Quick Actions */}
         <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+              <div className="mb-4 sm:mb-0">
                 <h3 className="text-xl font-semibold mb-2">Ready to invest more?</h3>
                 <p className="text-blue-100">Your portfolio is performing well. Consider adding more funds.</p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
                   className="bg-white/20 hover:bg-white/30 text-white border border-white/30"
                   onClick={() => navigate('/invest')}

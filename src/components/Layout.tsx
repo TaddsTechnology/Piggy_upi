@@ -59,9 +59,11 @@ const Layout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 xl:pl-72 pb-nav-mobile xl:pb-6">
-        <div className="max-w-7xl mx-auto min-h-screen-mobile px-2 xl:px-0">
-          <Outlet />
+      <main className="flex-1 xl:pl-72 pb-nav-mobile xl:pb-6 mobile-no-scroll">
+        <div className="max-w-7xl mx-auto min-h-screen-mobile px-2 sm:px-4 xl:px-6">
+          <div className="w-full overflow-hidden">
+            <Outlet />
+          </div>
         </div>
       </main>
 
